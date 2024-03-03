@@ -166,7 +166,7 @@ export function postTalentToChat(actor, talent, attackRoll, target, inputBoons) 
 
   const attackAttribute = talentData.action?.attack?.toLowerCase() || ''
   const defenseAttribute = talentData.action?.against?.toLowerCase() || '' // displayed as "against" in the sheet
-  const savingAttribute = talentData?.action?.defense?.toLowerCase() || '' // displayed as "Defense" in the sheet
+  //const savingAttribute = talentData?.action?.defense?.toLowerCase() || '' // displayed as "Defense" in the sheet
 
   const attackAttributeImmune = actor?.getAttribute(attackAttribute)?.immune
   const defenseAttributeImmune = target?.getAttribute(defenseAttribute)?.immune
@@ -225,11 +225,12 @@ export function postTalentToChat(actor, talent, attackRoll, target, inputBoons) 
   data['description'] = talentData.description
   data['defense'] = talentData.action?.defense
   data['defenseboonsbanes'] = parseInt(talentData.action?.defenseboonsbanes)
-  data['challStrength'] = savingAttribute === 'strength'
-  data['challAgility'] = savingAttribute === 'agility'
-  data['challIntellect'] = savingAttribute === 'intellect'
-  data['challWill'] = savingAttribute === 'will'
-  data['challPerception'] = savingAttribute === 'perception'
+  // data['challStrength'] = savingAttribute === 'strength'
+  // data['challAgility'] = savingAttribute === 'agility'
+  // data['challIntellect'] = savingAttribute === 'intellect'
+  // data['challWill'] = savingAttribute === 'will'
+  // data['challPerception'] = savingAttribute === 'perception'
+  data['challenges'] = talentData.action.challengeRolls
   data['uses'] = usesText
   data['healing'] = talentData?.healing?.healactive && talentData?.healing?.healing ? talentData?.healing?.healing : false
   data['targetName'] = target?.name || ''

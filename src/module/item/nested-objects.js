@@ -101,6 +101,17 @@ export class DamageType {
   }
 }
 
+export class ChallengeRoll {
+  constructor (obj) {
+    if (obj === undefined) obj = {}
+    if (typeof obj === 'string') obj = JSON.parse(obj)
+
+    this.attribute = obj.attribute || ''
+    this.boonsBanes = obj.boonsBanes || 0
+    this.name = obj.name || ''
+  }
+}
+
 /* -------------------------------------------- */
 /*  Transfer functions                          */
 

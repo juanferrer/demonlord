@@ -1,6 +1,6 @@
 import {onManageActiveEffect, prepareActiveEffectCategories} from '../../active-effects/effects'
 import {DL} from '../../config'
-import {DamageType} from '../nested-objects'
+import {DamageType, ChallengeRoll} from '../nested-objects'
 import tippy from "tippy.js";
 import {buildDropdownList} from "../../utils/handlebars-helpers";
 import 'tippy.js/animations/shift-away.css';
@@ -95,6 +95,7 @@ export default class DLBaseItemSheet extends ItemSheet {
     if (['talent', 'weapon', 'spell', 'endoftheround'].includes(item.type)) {
       // Set the update key based on type
       const damageKey = 'system.action.damagetypes'
+      
       // Grab damages from form
       let altdamage = updateData.altdamage
       let altdamagetype = updateData.altdamagetype
@@ -111,6 +112,29 @@ export default class DLBaseItemSheet extends ItemSheet {
       // Remove the unzipped values from the update data
       delete updateData.altdamage
       delete updateData.altdamagetype
+
+      // Set update key for challenge rolls
+      const challengeKey = 'system.action.challengeRolls'
+
+      // Grab challenge rolls from form
+      let challengeRollAttribute = updateData.challengeRollAttribute.filter(Boolean)
+      let challengeRollBoonsBanes = updateData.challengeRollBoonsBanes
+      let challengeRollName = updateData.challengeRollName
+      challengeRollAttribute = Array.isArray(challengeRollAttribute) ? challengeRollAttribute : [challengeRollAttribute]
+      challengeRollBoonsBanes = Array.isArray(challengeRollBoonsBanes) ? challengeRollBoonsBanes : [challengeRollBoonsBanes]
+      challengeRollName = Array.isArray(challengeRollName) ? challengeRollName : [challengeRollName]
+
+      // Convert challenge rolls into objects, filtering out the ones without attribute
+      updateData[challengeKey] = challengeRollAttribute.map((attribute, index) => ({
+        attribute: attribute,
+        boonsBanes: challengeRollBoonsBanes[index],
+        name: challengeRollName[index]
+      })).filter(r => Boolean(r.attribute))
+
+      // Remove old values from updateData
+      delete updateData.challengeRollAttribute
+      delete updateData.challengeRollBoonsBanes
+      delete updateData.challengeRollNames
     }
 
     // If a Talent has no uses it's always active
@@ -195,6 +219,9 @@ export default class DLBaseItemSheet extends ItemSheet {
 
     // Damage types
     html.find('.damagetype-control').click(async ev => await this._onManageDamageType(ev))
+
+    // Challenge rolls
+    html.find('.challengerolls-control').click(async ev => await this._onManageChallengeRolls(ev))
 
     // Max castings
     html.find('.max-castings-control').change(async ev => await this._onManageMaxCastings(ev, this))
@@ -308,6 +335,17 @@ export default class DLBaseItemSheet extends ItemSheet {
     if (a.dataset.action === 'create') damageTypes.push(new DamageType())
     else if (a.dataset.action === 'delete') damageTypes.splice(a.dataset.id, 1)
     await this.object.update({[updKey]: damageTypes}, {...options, parent: this.actor}).then(_ => this.render())
+  }
+
+  async _onManageChallengeRolls (ev, options = {}) {
+    ev.preventDefault()
+    const a = ev.currentTarget
+    const challengeRolls = this.object.system.action.challengeRolls
+    const updKey = 'system.action.challengeRolls'
+
+    if (a.dataset.action === 'create') challengeRolls.push(new ChallengeRoll())
+    else if (a.dataset.action === 'delete') challengeRolls.splice(a.dataset.id, 1)
+  await this.object.update({[updKey]: challengeRolls}, {...options, parent: this.actor}).then(_ => this.render())
   }
 
   async _onManageMaxCastings (ev, sheet) {

@@ -10,6 +10,23 @@
 --}}
 
 <div class="gmonly">
+  {{#each data.challenges as |challenge id|}}
+  <div class="challengeaction request-challengeroll">
+    <div class="header" data-attribute="{{challenge.attribute}}" data-boba="{{challenge.boonsBanes}}">
+      <div class="challenge-img"></div>
+      {{#if challenge.name}}
+      <div>{{challenge.name}}</div>
+      {{else}}
+      <div>{{localize "DL.ChallengeRoll"}}: {{localize (concat "DL.Attribute" (capitalize challenge.attribute))}}
+        {{#if challenge.boonsBanes}}({{challenge.boonsBanes}}){{/if}}
+      </div>
+      {{/if}}
+    </div>
+  </div>
+  {{/each}}
+</div>
+{{!-- 
+<div class="gmonly">
   {{#if data.challStrength}}
   <div class="challengeaction request-challengeroll">
     <div class="header" data-attribute="Strength" data-boba="{{data.defenseboonsbanes}}">
@@ -60,4 +77,4 @@
     </div>
   </div>
   {{/if}}
-</div>
+</div> --}}

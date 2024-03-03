@@ -68,6 +68,8 @@ function _getAttributes(groupName) {
     attributes = ['', 'C', 'U', 'R', 'E']
   } else if (groupName === 'system.requirement.attribute') {
     attributes = ['', 'strength', 'agility', 'intellect', 'will', 'perception']
+  } else {
+    attributes = ['', 'strength', 'agility', 'intellect', 'will', 'perception']
   }
   return attributes
 }

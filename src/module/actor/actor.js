@@ -406,6 +406,7 @@ export class DemonlordActor extends Actor {
       targets: defendersTokens,
       itemId: item.id,
       hitTargets: hitTargets,
+      attackRoll: attackRoll
     })
   }
 
@@ -441,6 +442,7 @@ export class DemonlordActor extends Actor {
     const challengeRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
     await challengeRoll.evaluate()
     postAttributeToChat(this, attribute.key, challengeRoll, parseInt(inputBoons) || 0)
+    return challengeRoll
   }
 
   rollChallenge(attribute) {
@@ -508,9 +510,11 @@ export class DemonlordActor extends Actor {
       sourceToken: this.token || tokenManager.getTokenByActorId(this.id),
       targets: targets,
       itemId: talent.id,
+      attackRoll: attackRoll
     })
 
     postTalentToChat(this, talent, attackRoll, target?.actor, parseInt(inputBoons) || 0)
+    return attackRoll
   }
 
   /* -------------------------------------------- */
@@ -578,24 +582,33 @@ export class DemonlordActor extends Actor {
       sourceToken: this.token || tokenManager.getTokenByActorId(this.id),
       targets: targets,
       itemId: spell.id,
+      attackRoll: attackRoll
     })
 
     postSpellToChat(this, spell, attackRoll, target?.actor, parseInt(inputBoons) || 0)
+    return attackRoll
   }
 
   /* -------------------------------------------- */
 
   async rollItem(itemID, _options = {event: null}) {
     const item = this.items.get(itemID)
+    let deleteItem = false
 
-    if (item.system.quantity != null) {
-      if (item.system.quantity < 1) {
-        ui.notifications.warn(game.i18n.localize('DL.ItemMaxUsesReached'))
-        return
+    if (item.system.quantity != null && item.system.consumabletype) {
+      if (item.system.quantity === 1 && item.system.autoDestroy) {
+        deleteItem = true
       }
 
-      item.system.quantity--
-      await Item.updateDocuments([item], {parent: this})  
+      if (item.system.quantity < 1 ) {
+        if (item.system.autoDestroy) {
+          return await item.delete()
+        } else { 
+          return ui.notifications.warn(game.i18n.localize('DL.ItemMaxUsesReached'))
+        }  
+      }      
+
+      await item.update({'system.quantity': --item.system.quantity}, {parent: this})
     }
 
     if (item.system?.action?.attack) {
@@ -605,6 +618,9 @@ export class DemonlordActor extends Actor {
     } else {
       await this.useItem(item, 0, 0)
     }
+
+    if (deleteItem) await item.delete()
+
   }
 
   async useItem(item, inputBoons, inputModifier) {    
@@ -635,6 +651,7 @@ export class DemonlordActor extends Actor {
     }
 
     postItemToChat(this, item, attackRoll, target?.actor, parseInt(inputBoons) || 0)
+    return attackRoll
   }
 
   /* -------------------------------------------- */

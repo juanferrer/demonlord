@@ -49,6 +49,7 @@ export function registerHandlebarsHelpers() {
     _buildPathAttributeTwoSetViewSelector(attributeName, isSelected, selectedName, selectedValue, idx)
   )
   Handlebars.registerHelper('dlAvailabilityDropdown', (groupName, checkedKey) => _buildAvailabilityDropdownItem(groupName, checkedKey))
+  Handlebars.registerHelper('dlConsumableDropdown', (groupName, checkedKey) => _buildConsumableDropdownItem(groupName, checkedKey))
   Handlebars.registerHelper('dlCheckCharacteristicsIsNull', (actorData) => _CheckCharacteristicsIsNull(actorData));  
 }
 
@@ -71,6 +72,9 @@ function _getAttributes(groupName) {
   } else {
     attributes = ['', 'strength', 'agility', 'intellect', 'will', 'perception']
   }
+  else if (groupName === 'system.consumabletype') {
+    attributes = ['', 'D', 'F', 'P', 'V', 'T']
+  }  
   return attributes
 }
 
@@ -181,6 +185,7 @@ export function buildDropdownList(groupName, checkedKey) {
   if (groupName === 'level.attributeSelect') return _buildPathAttributeSelectDropdownList(checkedKey)
   if (groupName.startsWith('level.attributeSelectTwoSet')) return _buildPathAttributeTwoSetDropdownList(groupName, checkedKey)
   if (groupName === 'system.hands') {labelPrefix = 'DL.WeaponHands'; useIcon = false}
+  if (groupName === 'system.consumabletype') {labelPrefix = 'DL.ConsumableType'; useIcon = false}
   if (groupName === 'system.availability') {labelPrefix = 'DL.Availability', iconPrefix = 'dl-icon-availability-'}
   let attributes = _getAttributes(groupName)
 
@@ -351,3 +356,15 @@ function _buildAvailabilityDropdownItem(groupName, checkedKey) {
 }
 
 
+function _buildConsumableDropdownItem(groupName, checkedKey) {
+  const attributes = ['', 'D', 'F', 'P', 'V', 'T']
+  for (let attribute of attributes) {
+    if (checkedKey != attribute) continue
+    const label = attribute === '' ? i18n("DL.ConsumableNone") : i18n(`DL.ConsumableType${attribute}`)
+    let html =
+      `<div class="dl-new-project-2 dropdown" name="${groupName}" value="${checkedKey}">
+            <span style="width: 120px; text-align: center; text-overflow: ellipsis">${label} </span>
+       </div>`
+    return new Handlebars.SafeString(html)
+  }
+}

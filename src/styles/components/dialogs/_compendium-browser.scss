@@ -1,0 +1,44 @@
+.compendium-browser-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+nav.browser-navigation {
+  font-family: $font-header;
+  font-size: 10px;
+  display: inline-flex;
+  justify-content: space-evenly;
+  align-items: center;
+  border: none;
+  color: white;
+  text-transform: uppercase;
+
+  background: rgb(0, 0, 0);
+  box-shadow: 0px 0px 15px 12px rgba(0, 0, 0, 1);
+
+  grid-area: nav;
+  margin-right: 20px;
+
+  a.item {
+    padding: 5px;
+  }
+
+  a.item.active {
+    border-bottom: 1px solid var(--demonlord-red);
+    text-shadow: 0 0 8px red;
+  }
+}
+
+section.browser-body {
+  width: 100%;
+}
+
+section.browser-content > .tab.active {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+
+  margin-top: 20px;
+}

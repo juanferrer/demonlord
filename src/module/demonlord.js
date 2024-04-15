@@ -45,6 +45,7 @@ import 'tippy.js/dist/tippy.css';
 import {registerHandlebarsHelpers} from "./utils/handlebars-helpers";
 import DLBaseActorSheet from "./actor/sheets/base-actor-sheet";
 import {_onUpdateWorldTime, DLCombat} from "./combat/combat"; // optional for styling
+import { DLCompendiumBrowser } from './compendium-browser/compendium-browser.js'
 
 
 Hooks.once('init', async function () {
@@ -206,6 +207,23 @@ Hooks.once('setup', function () {
 
   // Set active effect keys-labels
   DLActiveEffectConfig.initializeChangeKeys()
+})
+
+/**
+ * Add compendium browser button
+ */
+Hooks.on('renderCompendiumDirectory', async (app, html) => {
+  const compendiumDirectoryFooter = html.find('.directory-footer')[0]
+  const button = document.createElement('button')
+  button.innerHTML = `<i class="fas fa-search"></i> Compendium Browser `
+  button.classList.add('compendium-browser-button')
+  button.addEventListener('click', () => {
+    new DLCompendiumBrowser({  }, {
+      top: 50,
+      right: 700,
+    }).render(true)
+  })
+  compendiumDirectoryFooter.append(button)
 })
 
 /**

@@ -29,7 +29,8 @@ export function makeIntField(init = 0, max, min) {
 export function makeStringField(init = '', blank = true) {
   return new foundry.data.fields.StringField({
     initial: init,
-    blank: blank
+    blank: blank,
+    textSearch: true
   })
 }
 

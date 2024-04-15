@@ -69,8 +69,7 @@ function _getAttributes(groupName) {
     attributes = ['', 'C', 'U', 'R', 'E']
   } else if (groupName === 'system.requirement.attribute') {
     attributes = ['', 'strength', 'agility', 'intellect', 'will', 'perception']
-  }
-  else if (groupName === 'system.consumabletype') {
+  } else if (groupName === 'system.consumabletype') {
     attributes = ['', 'D', 'F', 'P', 'V', 'T']
   }  
   return attributes

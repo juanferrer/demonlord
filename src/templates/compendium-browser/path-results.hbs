@@ -1,0 +1,7 @@
+<section class="compendium-browser-section results">
+    <ul class="item-list result-list">
+        {{#each data.path as |path id|}}
+            {{> systems/demonlord/templates/compendium-browser/path.hbs entry=path}}
+        {{/each}}
+    </ul>
+</section>

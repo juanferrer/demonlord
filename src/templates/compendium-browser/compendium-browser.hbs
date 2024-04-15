@@ -1,0 +1,83 @@
+<form autocomplete="off" class="compendium-browser-form">
+
+  {{!-- Navigation --}}
+  <nav class="browser-navigation" data-group="primary">
+    <a class="item active" data-tab="ancestry">{{localize "DL.TabsAncestries"}}</a>
+    <a class="item" data-tab="path">{{localize "DL.TabsPaths"}}</a>
+    <a class="item" data-tab="feature">{{localize "DL.TabsFeatures"}}</a>
+    <a class="item" data-tab="talent">{{localize "DL.TabsTalents"}}</a>
+    <a class="item" data-tab="item">{{localize "DL.TabsItems"}}</a>
+    <a class="item" data-tab="spell">{{localize "DL.TabsSpells"}}</a>
+    <a class="item" data-tab="table">{{localize "DL.TabsTables"}}</a>
+    <a class="item" data-tab="journal">{{localize "DL.TabsJournals"}}</a>
+    {{#if isGM}}
+    <a class="item" data-tab="creature">{{localize "DL.TabsCreatures"}}</a>
+    <a class="item" data-tab="character">{{localize "DL.TabsCharacters"}}</a>
+    {{/if}}
+  </nav>
+
+  {{!-- Body --}}
+  <section class="browser-body">
+    <section class="browser-content">
+      {{!-- Ancestries Tab --}}
+      <div class="tab ancestry active" data-group="primary" data-tab="ancestry">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Paths Tab --}}
+      <div class="tab path" data-group="primary" data-tab="path">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/path-results.hbs}}
+      </div>
+
+      {{!-- Features Tab --}}
+      <div class="tab feature" data-group="primary" data-tab="feature">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Talents Tab --}}
+      <div class="tab talent" data-group="primary" data-tab="talent">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Items Tab --}}
+      <div class="tab item" data-group="primary" data-tab="item">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Spells Tab --}}
+      <div class="tab spell" data-group="primary" data-tab="spell">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Tables Tab --}}
+      <div class="tab table" data-group="primary" data-tab="table">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Journals Tab --}}
+      <div class="tab journal" data-group="primary" data-tab="journal">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Creatures Tab --}}
+      <div class="tab creature" data-group="primary" data-tab="creature">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+
+      {{!-- Characters Tab --}}
+      <div class="tab character" data-group="primary" data-tab="character">
+        {{> systems/demonlord/templates/compendium-browser/search.hbs}}
+        {{> systems/demonlord/templates/compendium-browser/results.hbs}}
+      </div>
+    </section>
+  </section>
+</form>

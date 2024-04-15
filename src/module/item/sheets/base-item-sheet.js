@@ -164,7 +164,7 @@ export default class DLBaseItemSheet extends ItemSheet {
     })
     tippy('.dl-new-project-2.dropdown', {
       content(reference) {
-        html = buildDropdownList(reference.attributes.name.value, reference.attributes.value.value)
+        html = buildDropdownList(reference.attributes.name.value, reference.attributes.value.value, data)
         return html
       },
       allowHTML: true,

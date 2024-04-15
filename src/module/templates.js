@@ -74,5 +74,11 @@ export const preloadHandlebarsTemplates = async function () {
     'systems/demonlord/templates/chat/partial/chat-measured-template.hbs',
     'systems/demonlord/templates/chat/partial/chat-effects.hbs',
     'systems/demonlord/templates/chat/partial/chat-description.hbs',
+
+    // Compendium Browser Partials
+    'systems/demonlord/templates/compendium-browser/search.hbs',
+    'systems/demonlord/templates/compendium-browser/results.hbs',
+    'systems/demonlord/templates/compendium-browser/path-results.hbs',
+    'systems/demonlord/templates/compendium-browser/path.hbs',
   ])
 }

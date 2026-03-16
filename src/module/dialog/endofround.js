@@ -47,7 +47,7 @@ export class DLEndOfRound extends HandlebarsApplicationMixin(ApplicationV2) {
     const combatants = Array.from(this.currentCombat.combatants?.values()) || []
 
     await combatants
-      .filter(combatant => !combatant.defeated && combatant.actor.type === 'creature')
+      .filter(combatant => !combatant.defeated && combatant.actor.type === 'creature' && combatant.actor?.effects.find(e => e.statuses?.has('incapacitated') && !e.disabled) === undefined)
       .filter(combatant => combatant.actor.items.filter(i => i.type === 'endoftheround').length > 0)
       .sort((a, b) => (a.initiative > b.initiative ? -1 : 1))
       .forEach(async (combatant, index) => {

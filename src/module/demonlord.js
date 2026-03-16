@@ -205,7 +205,7 @@ Hooks.once('setup', function () {
     }, {})
   }
 
-  // Allow manual d3 die rolling and remove non standard dice
+  // Allow manual d3 die rolls and remove non standard dice
   CONFIG.Dice.fulfillment.dice = {
     d3: { label: "d3", icon: "<i class='fa-solid fa-dice-d6'></i>" },
     d6: { label: "d6", icon: "<i class='fa-solid fa-dice-d6'></i>" },

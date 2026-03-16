@@ -970,6 +970,7 @@ export const registerSettings = function () {
     scope: 'world',
     type: Boolean,
     config: true
+  })
   game.settings.register('demonlord', 'damageScrollText', {
     name: game.i18n.localize('DL.SettingDamageScrollText'),
     hint: game.i18n.localize('DL.SettingDamageScrollTextHint'),

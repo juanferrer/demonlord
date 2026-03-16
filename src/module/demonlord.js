@@ -205,6 +205,13 @@ Hooks.once('setup', function () {
     }, {})
   }
 
+  // Allow manual d3 die rolling and remove non standard dice
+  CONFIG.Dice.fulfillment.dice = {
+    d3: { label: "d3", icon: "<i class='fa-solid fa-dice-d6'></i>" },
+    d6: { label: "d6", icon: "<i class='fa-solid fa-dice-d6'></i>" },
+    d20: { label: "d20", icon: "<i class='fa-solid fa-dice-d20'></i>" },
+  }
+
   const effects = DLAfflictions.buildAll()
 
   // Add the default status icons if the setting is not on

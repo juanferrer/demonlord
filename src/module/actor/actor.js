@@ -320,6 +320,20 @@ export class DemonlordActor extends Actor {
       }
 
       await DLActiveEffects.embedActiveEffects(this, doc, 'create')
+
+      // Also, if any of the effects in the document contains an affliction, activate it
+      if (['character', 'creature'].includes(this.type)) {
+        const effects = doc.effects.filter(e => e.changes.some(c => c.key === 'system.maluses.affliction'))
+        for (const activeEffect of effects) {
+          const changes = activeEffect.changes
+          for (const affliction of changes.filter(c => c.key === 'system.maluses.affliction')) {
+            if (!this.isImmuneToAffliction(affliction.value.toLowerCase())) {
+              await this.setFlag('demonlord', affliction.value.toLowerCase(), true)
+              await findAddEffect(this, affliction.value.toLowerCase())
+            }
+          }
+        }
+      }
     }
     // No need to update if nothing was changed
     if (documents.length > 0) {
@@ -367,6 +381,33 @@ export class DemonlordActor extends Actor {
       await this._handleDescendantDocuments(documents[0].parent, {debugCaller: `_handleOnUpdateDescendant [${documents.length}]`})
     }
     return await Promise.resolve()
+  }
+
+  async _onDeleteDescendantDocuments(documentParent, collection, documents, ids, options, userId) {
+    await super._onDeleteDescendantDocuments(documentParent, collection, documents, ids, options, userId)
+
+    if (userId === game.userId) {
+      await this._handleOnDeleteDescendantDocuments(documents)
+    }
+  }
+
+  async _handleOnDeleteDescendantDocuments(documents) {
+    
+    // Also, if any of the effects in the deleted documents contains an affliction (and it's the last instance of this affliction), remove it
+    if (['character', 'creature'].includes(this.type)) {
+      for (const doc of documents.filter(d => d.effects?.some(e => e.changes?.some(c => c.key === 'system.maluses.affliction')))) {
+        const effects = doc.effects.filter(e => e.changes?.some(c => c.key === 'system.maluses.affliction'))
+        for (const activeEffect of effects) {
+          const changes = activeEffect.changes
+          for (const affliction of changes.filter(c => c.key === 'system.maluses.affliction')) {
+            if (!this.appliedEffects?.some(e => e.changes.some(c => c.key === 'system.maluses.affliction'))) {
+              await this.setFlag('demonlord', affliction.value.toLowerCase(), false)
+              await findDeleteEffect(this, affliction.value.toLowerCase())
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -620,7 +661,7 @@ getTargetAttackBane(target) {
     await challengeRoll.evaluate()
 
     if (options) postCustomTextToChat(this, challengeRoll, options, attribute.key)
-      else 
+    else
         postAttributeToChat(this, attribute.key, challengeRoll, parseInt(inputBoons) || 0, parseInt(inputModifier) || 0)
 
     for (let effect of this.appliedEffects) {
@@ -757,9 +798,9 @@ getTargetAttackBane(target) {
       if (targets.length === 1)
         boons -= (
           (target?.actor?.system.bonuses.defense.boons[defenseAttribute] || 0) +
-          (target?.actor?.system.bonuses.defense.boons.all || 0) + 
+          (target?.actor?.system.bonuses.defense.boons.all || 0) +
           this.getTargetAttackBane(target.actor))
-          
+
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
 
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
@@ -971,7 +1012,7 @@ getTargetAttackBane(target) {
           (parseInt(target?.actor?.system.bonuses.defense.boons[defenseAttribute]) || 0) +
           (parseInt(target?.actor?.system.bonuses.defense.boons.all || 0)) +
           this.getTargetAttackBane(target.actor))
-          
+
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
 
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
@@ -1548,7 +1589,7 @@ getTargetAttackBane(target) {
               parent: actor, animate: false
             })
           }
-        } 
+        }
       }
     }
 
@@ -1676,7 +1717,7 @@ getTargetAttackBane(target) {
   async restActor(restTime, magicRecovery, talentRecovery, healing) {
     // Reset talent and spell uses
     let talentData = this.items.filter(i => i.type === 'talent')
-    let spellData = this.items.filter(i => i.type === 'spell')
+    let spellData = this.items.filter(i => i.type === 'spell' && i.system.castings.regainOnRest)
     if(talentRecovery) talentData = talentData.map(t => ({_id: t.id, 'system.uses.value': 0}))
     if(magicRecovery) spellData = spellData.map(s => ({_id: s.id, 'system.castings.value': 0}))
     await this.updateEmbeddedDocuments('Item', [...talentData, ...spellData])

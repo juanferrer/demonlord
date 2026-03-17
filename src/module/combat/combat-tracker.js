@@ -323,7 +323,8 @@ calculateEncounterDifficulty(combatants) {
       }
 
       const endofrounds = combatant.actor?.getEmbeddedCollection('Item')?.filter(e => e.type === 'endoftheround') ?? []
-      if (endofrounds.length > 0) hasEndOfRoundEffects = true
+      const isIncapacitated = combatant.actor?.effects.find(e => e.statuses?.has('incapacitated') && !e.disabled) === undefined ? false : true
+      if (endofrounds.length > 0 && !isIncapacitated) hasEndOfRoundEffects = true
     })
 
     html.querySelectorAll('.tracker-effect').forEach(combatTrackerEffect =>
@@ -358,19 +359,32 @@ calculateEncounterDifficulty(combatants) {
       html
         .querySelector('.combat-tracker.plain')
         ?.insertAdjacentHTML('beforeend',
-          `<li id="combat-endofround" class="combatant actor directory-item flexrow">
+          `<li id="combat-endofround-top" class="combatant actor directory-item flexrow">
              <img class="token-image" src="systems/demonlord/assets/ui/icons/pentragram.webp"/>
              <div class="token-name flexcol"><strong>${i18n("DL.CreatureSpecialEndRound")}</strong></div>
            </li>`,
         )
+      // When you start a combat with a creature that has an end of the round effect, the combat scene opens with that effect triggering immediately.
+      // Demon Lord page 216
+      if (game.combat.active && game.combat.round <= 1) {
+        html.querySelector('.combat-tracker.plain')?.insertAdjacentHTML(
+          'afterBegin',
+          `<li id="combat-endofround-bottom" class="combatant actor directory-item flexrow">
+                <img class="token-image" src="systems/demonlord/assets/ui/icons/pentragram.webp"/>
+                <div class="token-name flexcol"><strong>${i18n('DL.CreatureSpecialEndRound')}</strong></div>
+              </li>`,
+        )
+      }
     }
 
     // End of the round click
-    html.querySelector('#combat-endofround')?.addEventListener('click', _ev => {
-      new DLEndOfRound(this.getCurrentCombat(), {
-        top: 50,
-        right: 700,
-      }).render(true)
+    html.querySelectorAll('[id^="combat-endofround"]')?.forEach(ce => {
+      ce.addEventListener('click', _ev => {
+        new DLEndOfRound(this.getCurrentCombat(), {
+          top: 50,
+          right: 700,
+        }).render(true)
+      })
     })
 
     // Draggable

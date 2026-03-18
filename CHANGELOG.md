@@ -2,8 +2,203 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.6.0]
+### Added
+- Option to automatically roll corruption when discovering a dark magic tradition
+- Ability to toggle off regain of spell castings on rest
+- Ability for creatures to act on fast and slow turns (active `effect system.bonuses.fastAndSlowTurn`)
+- On first round, show the EndOfRound effects at the top and at the bottom of the combat tracker (as per the rules)
+- pt-BR update from ovelha.azul
+
+### Fixed
+- Ownership check on actors (`getUserLevel()`)
+- Issue with afflictions from items not applying
+
+## [5.5.7]
+### Added
+- Option to enable damage/heal scroll text
+
+## [5.5.6]
+### Added
+- Support for Active Auras
+
+## [5.5.5]
+### Fixed
+- Pop-up chat messages ignoring events
+
+## [5.5.4]
+### Added
+- Continue with post-2025 preparations
+
+## [5.5.3]
+### Fixed
+- Broken creature descriptor
+
+## [5.5.2]
+### Added
+- Begin preparations for post-2025 (Demon Lord Engine)
+- Add DarkMagic indicator to spells
+
+## [5.5.0]
+### Added
+- Setting to show confirmation dialog for creature role removal
+- Handle creation/deletion of items in actors after modifying ancestry/path
+- Indicator for affliction immunity
+- Ability to toggle affliction immunity from afflictions tab (right click)
+
+## [5.4.6]
+### Added
+- Handle new frightened/horrified condition (post-2025)
+
+## [5.4.5]
+### Fixed
+- Fix display of immune attributes in creature sheet reference tab
+
+## [5.4.3]
+### Added
+- Automate Will challenge rolls against frightening/horrifying creatures and apply afflictions based on results
+
+## [5.4.2]
+### Added
+- Option to automatically select attack attribute on weapons with Finesse
+
+## [5.4.0]
+### Added
+- Limit tab visibility in actors for players with limited ownership
+- Add mechanism for an alternative initial tab for limited ownership
+- Implement boon button changes from GusRPG
+
+### Fixed
+- Creation of creature roles
+
+## [5.3.5]
+### Added
+- Improve layout of Compendium Browser
+
+## [5.3.4]
+### Added
+- Add QuickDraw in roll tables
+
+## [5.3.3]
+### Added
+- Create rollable table from Compendium Browser results
+
+## [5.3.2]
+### Fixed
+- Error when rolling damage from chat message
+
+## [5.3.1]
+### Added
+- Indicate items inherited from paths/ancestries
+- Allow relics to accept more item types
+
+## [5.3.0]
+### Added
+- Incantations!
+
+## [5.2.0]
+### Added
+- Setting to automatically adjust creature token vision based on `system.characteristics.perceptionsenses`
+- Roll insanity and corruption damage from chat message
+- Enriched text for some ancestry and path fields
+- Ignore active effects from unequipped equippable items
+- Set Reference as creatures' default tab
+
+### Fixed
+- Compendium browser unable to search creatures by difficulty
+- Size override from ancestries' level 4
+- Missing attributes from levels in old paths/ancestries
+- Item duplication on drag
+
+
+## [5.1.9]
+### Fixed
+- Automated Animations integration
+
+## [5.1.8]
+### Added
+- Display actor link status (RIP Actor Link Indicator)
+
+## [5.1.7]
+### Added
+- New special active effect durations (EndOfTheRound)
+
+### Fixed
+- Automate Help and Stabilize action
+
+
+## [5.1.6]
+### Fixed
+- Remove double damage for challenge rolls
+- Prevent resizing of unowned tokens
+
+## [5.1.5]
+### Added
+- New active effect special durations
+
+## [5.1.4]
+### Fixed
+- Add missed fields for ancestry migration
+- Fix two-sets attributes not working on paths and ancestries
+- Fix creation of special attacks from creature and vehicle sheets
+- Fix creature roles
+
+## [5.1.3]
+### Fixed
+- Restore migrations for ancestries and paths
+- Only hide damage totals from non-GMs
+- Remove unused templates
+
+
+## [5.1.2]
+### Fixed
+- Attack spell roll
+
+## [5.1.1]
+### Added
+- Redesign of settings menu
+
+### Fixed
+- Toggles editing wrong character sheet
+- Uneditable lifestyle in character sheet
+- Toggle info buttons not working
+
+## [5.1.0]
+### Added
+- Finish migration to ApplicationV2 (actor sheet, player tracker, all dialogs)
+- Add compendium browser
+- Add inventory tab to vehicles (controlled by same setting as for creatures)
+- Allow players to roll damage for owned creatures
+- Add indicator for "turn passed" in combat tracker
+- Add setting to toggle automatic resize of tokens based on the actor's system.characteristics.size
+- Add zh-CN.json
+
+### Fixed
+- Craggable combat tracker stuck for non-GMs
+- Fix GM unable to roll damage on blind rolls
+
+## [5.0.17]
+### Added
+- Attribute modifier in chat message for attack
+
+## [5.0.16]
+### Added
+- Option to hide damage/effect buttons from chat messages when attack roll gails
+
+## [5.0.15]
+### Added
+- Spell attack roll against multiple selected targets
+
+## [5.0.14]
+### Fixed
+- Combat tracker unable to delete tokens with a missing actor
+
+## [5.0.13]
+### Added
+- Add armor and ammunition to creature inventories
+
 ## [5.0.12]
-### Fixes
+### Fixed
 - ChatCard enhancements and Fixes
 - Rollback of ChatCard alias option
 

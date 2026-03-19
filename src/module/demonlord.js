@@ -8,6 +8,7 @@ import {registerSettings} from './settings.js'
 import {registerVisionModes} from './vision.js'
 import KeyState from './utils/key-state.js'
 import {DLCombatTracker} from './combat/combat-tracker.js'
+import { DLCombatant } from './combat/combatant.js'
 import {preloadHandlebarsTemplates} from './templates.js'
 import * as migrations from './migration.js'
 import {handleMigrations} from './migration.js'
@@ -80,6 +81,7 @@ Hooks.once('init', async function () {
   CONFIG.Item.documentClass = DemonlordItem
   foundry.applications.apps.DocumentSheetConfig.registerSheet(ActiveEffect, "demonlord", DLActiveEffectConfig, {makeDefault: true})
   CONFIG.ui.combat = DLCombatTracker
+  CONFIG.Combatant.documentClass = DLCombatant
   CONFIG.Combat.documentClass = DLCombat
   CONFIG.time.roundTime = 10
   // CONFIG.debug.hooks = true
@@ -171,7 +173,7 @@ Hooks.once('init', async function () {
     delete CONFIG.Token.movement.actions.swim.getCostFunction
     CONFIG.Token.movement.actions.fly.canSelect = token => token?.actor?.system.canFly
     CONFIG.Token.rulerClass = TokenRulerDemonLord
-  }  
+  }
 })
 
 Hooks.once('ready', async function () {
@@ -203,6 +205,13 @@ Hooks.once('setup', function () {
       obj[e[0]] = game.i18n.localize(e[1])
       return obj
     }, {})
+  }
+
+  // Allow manual d3 die rolls and remove non standard dice
+  CONFIG.Dice.fulfillment.dice = {
+    d3: { label: "d3", icon: "<i class='fa-solid fa-dice-d6'></i>" },
+    d6: { label: "d6", icon: "<i class='fa-solid fa-dice-d6'></i>" },
+    d20: { label: "d20", icon: "<i class='fa-solid fa-dice-d20'></i>" },
   }
 
   const effects = DLAfflictions.buildAll()

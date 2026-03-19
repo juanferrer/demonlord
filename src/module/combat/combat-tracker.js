@@ -186,7 +186,7 @@ calculateEncounterDifficulty(combatants) {
   }
 
   /** @override */
-  _onRender(_context, _options) {
+  async _onRender(_context, _options) {
     let init
     let hasEndOfRoundEffects = false
     const currentCombat = this.getCurrentCombat()
@@ -224,18 +224,45 @@ calculateEncounterDifficulty(combatants) {
       }
     }
 
+    // Before doing anything else, add display-only combatant for actors with double initiative
+    if (combatants) {
+      for (const combatant of combatants) {
+        if (combatant.actor?.system.fastAndSlowTurn) {
+          const existingDouble = game.combat.getCombatantsByToken(combatant.token).length > 1
+          if (!existingDouble) {
+            // Add a second combatant with initiative + 50 (see DLCombat.getInitiativeValue)
+            const doubleCombatant = (await this.viewed.createEmbeddedDocuments('Combatant', [combatant]))[0]
+            await doubleCombatant.update({ initiative: doubleCombatant.initiative + 50 })
+          }
+        }
+      }
+    }
+
     html.querySelectorAll('.combatant')?.forEach(el => {
       // For each combatant in the tracker, change the initiative selector
       const combId = el.getAttribute('data-combatant-id')
       const combatant = combatants.get(combId)
       if (!combatant) return
 
-      init = combatant.actor?.system.fastturn
-        ? game.i18n.localize('DL.TurnFast')
-        : game.i18n.localize('DL.TurnSlow')
 
-      if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML =
-        `<a class="combatant-control dlturnorder" title="${i18n('DL.TurnChangeTurn')}">${init}</a>`
+      const multipleCombatants = game.combat.getCombatantsByToken(combatant.token)
+
+      if (combatant.actor?.system.fastAndSlowTurn && multipleCombatants.length == 2) {
+        // The combatant has a double initiative, so we display "Fast" and "Slow"
+        init = combatant._id === multipleCombatants[0]._id
+          ? game.i18n.localize('DL.TurnSlow')
+          : game.i18n.localize('DL.TurnFast')
+        // Display only
+        if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML = `<span class="combatant-control dlturnorder">${init}</span>`
+      } else {
+        init = combatant.actor?.system.fastturn
+          ? game.i18n.localize('DL.TurnFast')
+          : game.i18n.localize('DL.TurnSlow')
+
+        // Change initiative by clicking on the name
+        if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML =
+          `<a class="combatant-control dlturnorder" title="${i18n('DL.TurnChangeTurn')}">${init}</a>`
+      }
 
       if (this.initiativeMethod === 'h' && game.user.isGM)
       {
@@ -296,10 +323,11 @@ calculateEncounterDifficulty(combatants) {
       }
 
       const endofrounds = combatant.actor?.getEmbeddedCollection('Item')?.filter(e => e.type === 'endoftheround') ?? []
-      if (endofrounds.length > 0) hasEndOfRoundEffects = true
+      const isIncapacitated = combatant.actor?.effects.find(e => e.statuses?.has('incapacitated') && !e.disabled) === undefined ? false : true
+      if (endofrounds.length > 0 && !isIncapacitated) hasEndOfRoundEffects = true
     })
 
-    html.querySelectorAll('.tracker-effect').forEach(combatTrackerEffect => 
+    html.querySelectorAll('.tracker-effect').forEach(combatTrackerEffect =>
       combatTrackerEffect.addEventListener('click', async ev => {
       ev.stopPropagation()
       ev.preventDefault()
@@ -310,7 +338,7 @@ calculateEncounterDifficulty(combatants) {
       )
     }))
 
-    html.querySelectorAll('.dlturnorder').forEach(dlTurnorder => 
+    html.querySelectorAll('a.dlturnorder').forEach(dlTurnorder =>
       dlTurnorder.addEventListener('click', async ev => {
       ev.stopPropagation()
       ev.preventDefault()
@@ -318,7 +346,7 @@ calculateEncounterDifficulty(combatants) {
       const combId = li.dataset.combatantId
       const combatant = combatants.get(combId)
       if (!combatant) return
-      
+
       if (game.user.isGM || combatant.actor.isOwner) {
         await combatant.actor.update({'system.fastturn': !combatant.actor.system.fastturn})
         const initChatMessage = await createInitChatMessage(combatant, {})
@@ -331,19 +359,32 @@ calculateEncounterDifficulty(combatants) {
       html
         .querySelector('.combat-tracker.plain')
         ?.insertAdjacentHTML('beforeend',
-          `<li id="combat-endofround" class="combatant actor directory-item flexrow">
+          `<li id="combat-endofround-top" class="combatant actor directory-item flexrow">
              <img class="token-image" src="systems/demonlord/assets/ui/icons/pentragram.webp"/>
              <div class="token-name flexcol"><strong>${i18n("DL.CreatureSpecialEndRound")}</strong></div>
            </li>`,
         )
+      // When you start a combat with a creature that has an end of the round effect, the combat scene opens with that effect triggering immediately.
+      // Demon Lord page 216
+      if (game.combat.active && game.combat.round <= 1) {
+        html.querySelector('.combat-tracker.plain')?.insertAdjacentHTML(
+          'afterBegin',
+          `<li id="combat-endofround-bottom" class="combatant actor directory-item flexrow">
+                <img class="token-image" src="systems/demonlord/assets/ui/icons/pentragram.webp"/>
+                <div class="token-name flexcol"><strong>${i18n('DL.CreatureSpecialEndRound')}</strong></div>
+              </li>`,
+        )
+      }
     }
 
     // End of the round click
-    html.querySelector('#combat-endofround')?.addEventListener('click', _ev => {
-      new DLEndOfRound(this.getCurrentCombat(), {
-        top: 50,
-        right: 700,
-      }).render(true)
+    html.querySelectorAll('[id^="combat-endofround"]')?.forEach(ce => {
+      ce.addEventListener('click', _ev => {
+        new DLEndOfRound(this.getCurrentCombat(), {
+          top: 50,
+          right: 700,
+        }).render(true)
+      })
     })
 
     // Draggable
@@ -361,6 +402,16 @@ calculateEncounterDifficulty(combatants) {
     button.classList.toggle('fa-hourglass-start')
     button.classList.toggle('fa-hourglass-end')
     combatant.classList.toggle('hide')
+  }
+
+  async _onToggleHidden(combatant) {
+    const multipleCombatants = game.combat.getCombatantsByToken(combatant.token)
+    if (multipleCombatants.length > 1) {
+      const hidden = multipleCombatants[0].hidden
+      for (let c of multipleCombatants) {
+        await c.update({ hidden: !hidden })
+      }
+    }
   }
 }
 
@@ -383,4 +434,3 @@ export async function _onUpdateCombat(combatData, _updateData, _options, _userId
     }
   }
 }
-

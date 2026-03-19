@@ -66,6 +66,7 @@ export class DemonlordToken extends foundry.canvas.placeables.Token {
 
     // Thanks to Anderware and his Combat-Tracker-Extensions: https://github.com/Anderware/Combat-Tracker-Extensions/blob/main/scripts/duplicate-combatant.js
     _onHoverIn(_event, _options) {
+        super._onHoverIn(_event, _options)
         const combatant = this.combatant
         if (combatant) {
             document.querySelectorAll('.combat-sidebar').forEach(tracker => {
@@ -80,6 +81,7 @@ export class DemonlordToken extends foundry.canvas.placeables.Token {
     }
 
     _onHoverOut(_event) {
+        super._onHoverOut(_event)
         const combatant = this.combatant;
         if (combatant) {
             document.querySelectorAll('.combat-sidebar').forEach(tracker => {

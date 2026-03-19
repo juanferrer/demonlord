@@ -229,8 +229,9 @@ calculateEncounterDifficulty(combatants) {
       for (const combatant of combatants) {
         if (combatant.actor?.system.fastAndSlowTurn) {
           const existingDouble = game.combat.getCombatantsByToken(combatant.token).length > 1
-          if (!existingDouble) {
+          if (!existingDouble && combatant.getFlag('demonlord', 'isDuplicated')) {
             // Add a second combatant with initiative + 50 (see DLCombat.getInitiativeValue)
+            await combatant.setFlag('demonlord', 'isDuplicated', true)
             const doubleCombatant = (await this.viewed.createEmbeddedDocuments('Combatant', [combatant]))[0]
             await doubleCombatant.update({ initiative: doubleCombatant.initiative + 50 })
           }

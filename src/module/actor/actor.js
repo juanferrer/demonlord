@@ -333,7 +333,7 @@ export class DemonlordActor extends Actor {
 
       // Also, if any of the effects in the document contains an affliction, activate it
       if (['character', 'creature'].includes(this.type)) {
-        const effects = doc.effects.filter(e => e.changes.some(c => c.key === 'system.maluses.affliction'))
+        const effects = doc.effects.filter(e => e.transfer && e.changes.some(c => c.key === 'system.maluses.affliction'))
         for (const activeEffect of effects) {
           const changes = activeEffect.changes
           for (const affliction of changes.filter(c => c.key === 'system.maluses.affliction')) {
@@ -406,7 +406,7 @@ export class DemonlordActor extends Actor {
     // Also, if any of the effects in the deleted documents contains an affliction (and it's the last instance of this affliction), remove it
     if (['character', 'creature'].includes(this.type)) {
       for (const doc of documents.filter(d => d.effects?.some(e => e.changes?.some(c => c.key === 'system.maluses.affliction')))) {
-        const effects = doc.effects.filter(e => e.changes?.some(c => c.key === 'system.maluses.affliction'))
+        const effects = doc.effects.filter(e => e.transfer && e.changes?.some(c => c.key === 'system.maluses.affliction'))
         for (const activeEffect of effects) {
           const changes = activeEffect.changes
           for (const affliction of changes.filter(c => c.key === 'system.maluses.affliction')) {

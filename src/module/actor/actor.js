@@ -201,6 +201,14 @@ export class DemonlordActor extends Actor {
     // And then round down
     system.characteristics.health.healingrate = Math.floor(system.characteristics.health.healingrate)
     // Insanity
+    if (!system.characteristics.insanity) {
+      system.characteristics.insanity = {
+        min: 0,
+        max: 0,
+        value: 0,
+        immune: 0
+      }
+    }
     system.characteristics.insanity.max += system.attributes.will.value
 
     // Final armor computation

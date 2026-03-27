@@ -120,6 +120,21 @@ export function registerHandlebarsHelpers() {
     else return game.i18n.localize(tooltip)
   })
 
+  Handlebars.registerHelper('dlLocalize', function (groupName, str) {
+    let result
+    switch (groupName) {
+      case 'WeaponHands':
+        if (!str.length) result = ''
+        else result = i18n(`DL.WeaponHands${str.capitalize()}`)
+        break
+      case 'SpellType':
+        if (!str.length) result = '―'
+        else result = i18n(`DL.SpellType${str.capitalize()}`)
+        break
+    }
+    return result
+  })
+
   Handlebars.registerHelper('enrichHTMLUnrolled', async (x) => await TextEditor.enrichHTML(x, { unrolled: true }))
   Handlebars.registerHelper('lookupAttributeModifier', (attributeName, actorData) =>
     actorData?.system?.attributes[attributeName.toLowerCase()]?.modifier

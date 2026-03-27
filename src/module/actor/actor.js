@@ -475,9 +475,9 @@ export class DemonlordActor extends Actor {
   	return result
   }
 
-  isImmuneToTarget(target) {
+  isFearRollCompleted(target) {
   	let actor = this
-  	const immuneArray = actor.appliedEffects.filter(x => x.name === game.i18n.format('DL.ImmuneToTarget', {
+  	const immuneArray = actor.appliedEffects.filter(x => x.name === game.i18n.format('DL.FearRollAgainst', {
   		creature: target.name
   	}))
   	let result = false
@@ -503,17 +503,19 @@ getTargetAttackBane(target) {
   const attacker = this
   if (!target) return 0
   if (!game.settings.get('demonlord', 'horrifyingBane') || attacker.isImmuneToAffliction('frightened')) return 0
-  const optionalRuleBaneValue = game.settings.get('demonlord', 'optionalRuleBaneValue') ? 1 : 2
   const ignoreLevelDependentBane =
     game.settings.get('demonlord', 'optionalRuleLevelDependentBane') &&
     ((attacker.system?.level >= 3 && attacker.system?.level <= 6 && target?.system?.difficulty <= 25) ||
       (attacker.system?.level >= 7 && target?.system?.difficulty <= 50)) ? false : true
   let baneValue = game.settings.get('demonlord', 'optionalRuleTraitMode2025')
-    ? (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && (target?.system.frightening || target?.system.horrifying) && !attacker.isImmuneToTarget(target) && 1) || 0
-    : (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && target?.system.horrifying && !attacker.isImmuneToTarget(target) && 1) || 0
+    ? (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && (target?.system.frightening || target?.system.horrifying) && 1) || 0
+    : (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && target?.system.horrifying && 1) || 0
 
   // Adjust bane if source of affliction can be seen, actor already has 1 (frightened), we need to add the difference
-  if (attacker.isFrightenedFrom(target)) baneValue += optionalRuleBaneValue
+  // 0 - no bane
+  // 1 - creature is horrifying, creature is frightening (only 2025 trtait mode)
+  // 2 - creature firhtened 
+  if (attacker.isFrightenedFrom(target)) baneValue += 2
   return baneValue
 }
 
@@ -1090,7 +1092,8 @@ getTargetAttackBane(target) {
       } else ui.notifications.warn(game.i18n.localize('DL.DialogWarningActorImmuneFrightened'))
     } else {
       const frightenedEffect = actor.effects.find(e => e.statuses?.has('frightened'))
-      await frightenedEffect.update({ 'duration.rounds': newValue })
+      // Only update effect duration if lasts longer than the current one
+      if ((frightenedEffect.duration.startTime + frightenedEffect.duration.rounds * 10) < (game.time.worldTime + newValue * 10)) await frightenedEffect.update({ 'duration.rounds': newValue })
       if (!isStunned) await stunnedChallengeRoll()
     }
     if (actor.system.characteristics.insanity.value === actor.system.characteristics.insanity.max) await this.goingMad()
@@ -1208,18 +1211,10 @@ getTargetAttackBane(target) {
               }),
             )
 
-          const traitType =
-            targets[0].actor.system.frightening && targets[0].actor.system.horrifying ?
-            game.i18n.localize('DL.CreatureHorrifying').toLowerCase() :
-            targets[0].actor.system.frightening ?
-            game.i18n.localize('DL.CreatureFrightening').toLowerCase() :
-            game.i18n.localize('DL.CreatureHorrifying').toLowerCase()
-
-          if (this.isImmuneToTarget(targets[0].actor))
+          if (this.isFearRollCompleted(targets[0].actor))
             return ui.notifications.warn(
-              game.i18n.format('DL.DialogWarningAlreadyMadeWILLImmune', {
-                creature: targets[0].actor.name,
-                trait: traitType
+              game.i18n.format('DL.DialogWarningAlreadyMadeWILL', {
+                creature: targets[0].actor.name
               }),
             )
         }
@@ -1227,7 +1222,7 @@ getTargetAttackBane(target) {
         const validTargetArray = targets.filter(
           target =>
           (target.actor.system.horrifying || target.actor.system.frightening) &&
-          !actor.isImmuneToTarget(target.actor) &&
+          !actor.isFearRollCompleted(target.actor) &&
           !ignoreTarget(target.actor),
         )
 
@@ -1239,9 +1234,9 @@ getTargetAttackBane(target) {
 
         for (const target of validTargetArray) {
           content += `&bull; ${target.actor.name}<br>`
-          if (target.actor.system.horrifying && !actor.isImmuneToTarget(target.actor) && !ignoreTarget(target.actor))
+          if (target.actor.system.horrifying && !actor.isFearRollCompleted(target.actor) && !ignoreTarget(target.actor))
             isHorrifying = true
-          if (target.actor.system.frightening && !actor.isImmuneToTarget(target.actor) && !ignoreTarget(target.actor))
+          if (target.actor.system.frightening && !actor.isFearRollCompleted(target.actor) && !ignoreTarget(target.actor))
             isFrightening = true
         }
 
@@ -1403,10 +1398,10 @@ getTargetAttackBane(target) {
           }
 
           const imuneToFrightenedEffect = new ActiveEffect({
-            name: game.i18n.format('DL.ImmuneToTarget', {
+            name: game.i18n.format('DL.FearRollAgainst', {
               creature: target.actor.name
             }),
-            icon: 'systems/demonlord/assets/icons/effects/immune.svg',
+            icon: 'systems/demonlord/assets/ui/other-svg/dice-twenty-faces-twenty.svg',
             duration: {
               rounds: 1,
             },
@@ -1416,9 +1411,6 @@ getTargetAttackBane(target) {
                 specialDuration: 'RestComplete',
               },
             },
-            description: game.i18n.format('DL.ImmuneToHorrifyingOneMinute', {
-              creature: target.actor.name
-            }),
             origin: target.actor.uuid
           })
 
@@ -1437,9 +1429,9 @@ getTargetAttackBane(target) {
                 target: targets[0].actor.name
               }),
             )
-          if (this.isImmuneToTarget(targets[0].actor))
+          if (this.isFearRollCompleted(targets[0].actor))
             return ui.notifications.warn(
-              game.i18n.format('DL.DialogWarningAlreadyMadeWILLImmune', {
+              game.i18n.format('DL.DialogWarningAlreadyMadeWILL', {
                 creature: targets[0].actor.name,
                 trait: game.i18n.localize('DL.CreatureHorrifying').toLowerCase()
               }),
@@ -1459,7 +1451,7 @@ getTargetAttackBane(target) {
             !target.actor.system.horrifying ||
             ignoreTarget(target.actor) ||
             actor.isFrightenedFrom(target.actor) ||
-            actor.isImmuneToTarget(target.actor)
+            actor.isFearRollCompleted(target.actor)
           ),
         )
         if (validTargetArray.length === 0) return ui.notifications.warn(game.i18n.localize('DL.DialogWarningInvalidTarget'))
@@ -1544,10 +1536,10 @@ getTargetAttackBane(target) {
 
           if (roll.total >= targetNumber) {
             const imuneToFrightenedEffect = new ActiveEffect({
-              name: game.i18n.format('DL.ImmuneToTarget', {
+              name: game.i18n.format('DL.FearRollAgainst', {
                 creature: target.actor.name
               }),
-              icon: 'systems/demonlord/assets/icons/effects/immune.svg',
+              icon: 'systems/demonlord/assets/ui/other-svg/dice-twenty-faces-twenty.svg',
               duration: {
                 rounds: 6,
               },

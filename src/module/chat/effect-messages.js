@@ -12,10 +12,11 @@ import { capitalize } from '../utils/utils'
  * @returns {Map<string, {string, string, string}>}
  * @private
  */
-function _remapEffects(effects) {
+function _remapEffects(effects, removeFrightenedEffect = false) {
   let m = new Map()
   // Active Auras module support
   effects = game.modules.get('ActiveAuras')?.active ? effects.filter(e => !e.flags?.ActiveAuras || foundry.utils.getProperty(e, `flags.ActiveAuras.isAura`) === undefined) : effects
+  effects = removeFrightenedEffect ? effects.filter(e => e.name != game.i18n.localize('DL.frightened')) : effects
   effects.forEach(effect =>
     effect.changes.forEach(change => {
       const obj = {
@@ -90,13 +91,16 @@ const changeListToMsgDefender = (m, keys, title, anonymize, f = plusify) => {
  * @returns {*}
  */
 export function buildAttackEffectsMessage(attacker, defender, item, attackAttribute, defenseAttribute, inputBoons, plus20, inputModifier) {
+  const applyBane = attacker.getTargetAttackBane(defender)
+  const baneValue = applyBane <= 1 ? applyBane : 3
+  // We remove Frightened Effect from ChatCard, because source is already frightened from target and later we add the correct effect name
+  const removeFrightenedEffect = baneValue === 3 && (defender?.system.frightening || defender?.system.horrifying) ? true : false
   const attackerEffects = Array.from(attacker.allApplicableEffects()).filter(effect => !effect.disabled)
-  let m = _remapEffects(attackerEffects)
+  let m = _remapEffects(attackerEffects, removeFrightenedEffect)
   const defenderEffects = defender ? Array.from(defender.allApplicableEffects()).filter(effect => !effect.disabled) : []
   let d = _remapEffects(defenderEffects)
   let defenderBoonsArray = [`system.bonuses.defense.boons.${defenseAttribute}`,"system.bonuses.defense.boons.all"]
 
-  const applyHorrifyingBane = attacker.getTargetAttackBane(defender)
   let otherBoons = ''
   let modifiers = ''
   let inputBoonsMsg = inputBoons ? _toMsg(game.i18n.localize('DL.DialogInput'), plusify(inputBoons)) : ''
@@ -154,12 +158,8 @@ export function buildAttackEffectsMessage(attacker, defender, item, attackAttrib
   let attributeText = 'DL.Attribute' + capitalize(attackAttribute)
   let attributeModMsg = attributeMod ? _toMsg(`${game.i18n.localize(attributeText)}`, plusify(attributeMod)) : ''
 
-  let revealHorrifyingBane = game.settings.get('demonlord', 'optionalRuleRevealHorrifyingBane')
   let creatureType
-
-  if (!game.settings.get('demonlord', 'optionalRuleTraitMode2025'))
-    creatureType = game.i18n.localize('DL.CreatureHorrifying')
-  else
+  if (game.settings.get('demonlord', 'optionalRuleTraitMode2025'))
     creatureType =
       defender?.system.frightening && defender?.system.horrifying
         ? game.i18n.localize('DL.CreatureHorrifying')
@@ -168,13 +168,42 @@ export function buildAttackEffectsMessage(attacker, defender, item, attackAttrib
         : defender?.system.horrifying
         ? game.i18n.localize('DL.CreatureHorrifying')
         : ''
+  else
+    creatureType =
+      defender?.system.frightening && defender?.system.horrifying
+        ? game.i18n.localize('DL.CreatureHorrifying') + '/' + game.i18n.localize('DL.CreatureFrightening')
+        : defender?.system.frightening
+        ? game.i18n.localize('DL.CreatureFrightening')
+        : defender?.system.horrifying
+        ? game.i18n.localize('DL.CreatureHorrifying')
+        : ''
 
-  const horrifyingText = applyHorrifyingBane > 1 ? game.i18n.localize('DL.CanSeeSoureOfAffliction') : `${game.i18n.localize(creatureType)} [${game.i18n.localize('DL.ActionTarget')}]`
-  let horrifyingHTMLPlayer = revealHorrifyingBane 
-        ? '<div class="gmremove">' + _toMsg(horrifyingText, applyHorrifyingBane*-1) + '</div>'
-        : '<div class="gmremove">' + _toMsg(`${game.i18n.localize('DL.OtherUnknown')} [${game.i18n.localize('DL.ActionTarget')}]`, applyHorrifyingBane*-1) + '</div>'
+  const revealHorrifyingBane = game.settings.get('demonlord', 'optionalRuleRevealHorrifyingBane')
+  // We add the correct effect and its bane(s) to the chatcard.
+  const horrifyingTextGM =
+    baneValue > 1
+      ? game.i18n.localize('DL.CanSeeSoureOfAffliction')
+      : `${game.i18n.localize(creatureType)} [${game.i18n.localize('DL.ActionTarget')}]`
+  let horrifyingHTMLGM
+  if (game.settings.get('demonlord', 'optionalRuleTraitMode2025'))
+    horrifyingHTMLGM =
+      baneValue > 1
+        ? _toMsg(horrifyingTextGM, baneValue * -1) +
+          _toMsg(`${game.i18n.localize(creatureType)} [${game.i18n.localize('DL.ActionTarget')}]`, -1)
+        : _toMsg(horrifyingTextGM, baneValue * -1)
+  else if (creatureType !== game.i18n.localize('DL.CreatureFrightening'))
+    horrifyingHTMLGM =
+      baneValue > 1
+        ? _toMsg(horrifyingTextGM, baneValue * -1) +
+          _toMsg(`${game.i18n.localize(creatureType)} [${game.i18n.localize('DL.ActionTarget')}]`, -1)
+        : _toMsg(horrifyingTextGM, baneValue * -1)
+  else horrifyingHTMLGM = _toMsg(horrifyingTextGM, baneValue * -1)
 
-  let horrifyingHTMLGM = '<div class="gmonly">' + _toMsg(horrifyingText, applyHorrifyingBane*-1) + '</div>'
+  horrifyingHTMLGM = '<div class="gmonly">' + horrifyingHTMLGM + '</div>'
+  const creatureTypeUnknown = game.i18n.localize('DL.OtherUnknown')
+  const horrifyingHTMLPlayer = revealHorrifyingBane
+    ? '<div class="gmremove">' + _toMsg(horrifyingTextGM, baneValue * -1) + '</div>'
+    : '<div class="gmremove">' + _toMsg(horrifyingTextGM, baneValue * -1).replace(creatureType, creatureTypeUnknown) + '</div>'
 
   let gmOnlyResult = changeListToMsgDefender(d, defenderBoonsArray, '', false)
   let playerOnlyResult = changeListToMsgDefender(d, defenderBoonsArray, '', true)
@@ -185,8 +214,8 @@ export function buildAttackEffectsMessage(attacker, defender, item, attackAttrib
     (itemAttributePenalty ? _toMsg(itemAttributeRequirement, plusify(itemAttributePenalty)) : '') +
     changeListToMsg(m, [`system.bonuses.attack.boons.${attackAttribute}`, "system.bonuses.attack.boons.all"], '') +
     otherBoons +
-    (applyHorrifyingBane ? horrifyingHTMLPlayer : '') +
-    (applyHorrifyingBane ? horrifyingHTMLGM : '') +
+    (applyBane ? horrifyingHTMLPlayer : '') +
+    (applyBane ? horrifyingHTMLGM : '') +
     (playerOnlyMsg ? playerOnlyMsg : '') +
     (gmOnlyMsg ? gmOnlyMsg : '')
   boonsMsg = boonsMsg+inputBoonsMsg ? `&nbsp;&nbsp;${game.i18n.localize('DL.TalentAttackBoonsBanes')}<br>` + boonsMsg+inputBoonsMsg : ''

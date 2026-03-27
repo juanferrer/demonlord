@@ -1251,7 +1251,7 @@ getTargetAttackBane(target) {
         const question = validTargetArray.length === 1 ? game.i18n.localize('DL.DialogDoYouSeeThisCreatureFirstTime') : game.i18n.localize('DL.DialogDoYouSeeTheseCreaturesFirstTime')
         const isLineOfSight = await foundry.applications.api.DialogV2.confirm({
           window: {
-            title: game.i18n.localize('DL.LookOutCreatures'),
+            title: game.i18n.localize('DL.FearRoll'),
           },
           content: question + content,
           position: {
@@ -1464,7 +1464,7 @@ getTargetAttackBane(target) {
         const question = validTargetArray.length === 1 ? game.i18n.localize('DL.DialogDoYouStartYourTurnWithLOSCreature') : game.i18n.localize('DL.DialogDoYouStartYourTurnWithLOSCreatures')
         const isLineOfSight = await foundry.applications.api.DialogV2.confirm({
           window: {
-            title: game.i18n.localize('DL.LookOutCreatures'),
+            title: game.i18n.localize('DL.FearRoll'),
           },
           content: question + content,
           position: {

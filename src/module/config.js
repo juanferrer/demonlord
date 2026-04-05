@@ -125,3 +125,5 @@ DL.defaultItemIcons = {
   creaturerole: 'icons/equipment/back/cape-layered-blue-accent.webp',
   relic: 'icons/commodities/treasure/sceptre-jeweled-gold.webp'
 }
+
+DL.difficultyScale = [1,5,10,25,50,100,250,500,750,1000,1500]

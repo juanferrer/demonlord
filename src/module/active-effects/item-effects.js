@@ -87,7 +87,7 @@ export class DLActiveEffects {
         effectDataList = DLActiveEffects.generateEffectDataFromArmor(doc, actor)
         break
       case 'creaturerole':
-        effectDataList = DLActiveEffects.generateEffectDataFromRole(doc)
+        effectDataList = DLActiveEffects.generateEffectDataFromRole(doc, actor, operation)
         break
       default:
         return await Promise.resolve(0)
@@ -302,9 +302,26 @@ export class DLActiveEffects {
 
   /* -------------------------------------------- */
 
-  static generateEffectDataFromRole(item) {
+  static bumpDifficulty(actor, steps, operation) {
+    const difficultyIndex = (operation === 'update') ? CONFIG.DL.difficultyScale.indexOf(actor.system.difficultyBase) : CONFIG.DL.difficultyScale.indexOf(actor.system.difficulty)
+    if (difficultyIndex === -1) {
+        ui.notifications.warn(game.i18n.format('DL.DialogWarningInvalidCreatureDifficulty', {difficulty: actor.system.difficulty}))
+        return null
+    }
+
+    const calculatedDifficulty = CONFIG.DL.difficultyScale[difficultyIndex + parseInt(steps)]
+    if (calculatedDifficulty === undefined) {
+        ui.notifications.warn(game.i18n.format('DL.DialogWarningCannotIncreaseDifficulty', {steps: steps, maxAllowed: CONFIG.DL.difficultyScale[CONFIG.DL.difficultyScale.length-1]}))
+        return null
+    }
+
+    return (operation === 'update') ? (calculatedDifficulty - actor.system.difficultyBase) : (calculatedDifficulty - actor.system.difficulty)
+  }
+
+  static generateEffectDataFromRole(item, actor, operation) {
     const priority = 5
     const data = item.system
+    const calculatedDifficulty = DLActiveEffects.bumpDifficulty(actor, data.characteristics.difficulty, operation)
 
     const effectData = {
       name: item.name,
@@ -344,7 +361,7 @@ export class DLActiveEffects {
         // addEffect('system.characteristics.corruption.value', data.characteristics.corruption.value, priority),
         // addEffect('system.characteristics.insanity.value', data.characteristics.insanity.value, priority),
 
-        addEffect('system.difficulty', data.characteristics.difficulty, priority),
+        addEffect('system.difficulty', calculatedDifficulty, priority),
         overrideEffect('system.characteristics.size', data.characteristics.size, priority),
         overrideEffect('system.frightening', data.frightening, priority, true),
         overrideEffect('system.horrifying', data.horrifying, priority, true),

@@ -783,14 +783,15 @@ getTargetAttackBane(target) {
     const target = targets[0]
     let attackRoll = null
 
-    if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'preRollTalent', targetActorUuid: target?.actor.uuid})
     if (!talentData?.action?.attack) {
+      if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'preRollTalent', targetActorUuid: target?.actor.uuid})
       await this.activateTalent(talent, true)
+      if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'postRollTalent', targetActorUuid: target?.actor.uuid})
     } else {
       await this.activateTalent(talent, Boolean(talentData.action?.damageActive))
 
       const attackAttribute = talentData.action.attack.toLowerCase()
-      const defenseAttribute = talentData.action?.attack?.toLowerCase()
+      const defenseAttribute = talentData.action?.against?.toLowerCase()
       const attacker = this
 
       const modifiers = [
@@ -814,7 +815,7 @@ getTargetAttackBane(target) {
           this.getTargetAttackBane(target.actor))
 
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
-
+      if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'preRollTalent', attackAttribute: attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: target?.actor.uuid})
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
       await attackRoll.evaluate()
 
@@ -823,6 +824,25 @@ getTargetAttackBane(target) {
         if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
       }
 
+      if (game.settings.get('demonlord', 'enableItemMacro')) {
+        let successfullHit = false
+        let targetNumber
+        if (targets.length) {
+          const defender = target.actor
+          targetNumber =
+            defenseAttribute === 'defense'
+              ? defender?.system.characteristics.defense
+              : defender?.system.attributes[defenseAttribute]?.value || ''
+          successfullHit = defender && attackRoll?.total >= targetNumber ? true : false
+        }
+        const plus20 =
+          attackRoll?.total >= 20 &&
+          (targetNumber
+            ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4)
+            : true)
+
+          await talent.executeDLMacro({},{pass : 'postRollTalent', attackRoll: attackRoll, targetNumber: targetNumber,  successfullHit: successfullHit, plus20: plus20, targetActorUuid: target?.actor.uuid})
+        }
     }
 
     Hooks.call('DL.UseTalent', {
@@ -833,7 +853,6 @@ getTargetAttackBane(target) {
     })
 
     postTalentToChat(this, talent, attackRoll, target?.actor, parseInt(inputBoons) || 0, parseInt(inputModifier) || 0)
-    if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'postRollTalent', attackRoll : attackRoll, targetActorUuid: target?.actor.uuid})
     return attackRoll
   }
 
@@ -1052,7 +1071,7 @@ getTargetAttackBane(target) {
 
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
 
-      if (game.settings.get('demonlord', 'enableItemMacro')) await item.executeDLMacro({},{pass : 'preRollItemAttack', attackAttribute : attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: target?.actor.uuid})
+      if (game.settings.get('demonlord', 'enableItemMacro')) await item.executeDLMacro({},{pass : 'preRollItem', attackAttribute : attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: target?.actor.uuid})
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
       await attackRoll.evaluate()
 
@@ -1068,7 +1087,7 @@ getTargetAttackBane(target) {
             : defender?.system.attributes[defenseAttribute]?.value || ''
       const successfullHit = (target && attackRoll?.total >= targetNumber) ? true : false
       const plus20 = attackRoll?.total >= 20 && (targetNumber ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4) : true)
-      await item.executeDLMacro({},{pass : 'postRollAttack', attackRoll : attackRoll, targetNumber: targetNumber, successfullHit: successfullHit, plus20: plus20, targetActorUuid: target?.actor.uuid})
+      await item.executeDLMacro({},{pass : 'preRollItem', attackRoll : attackRoll, targetNumber: targetNumber, successfullHit: successfullHit, plus20: plus20, targetActorUuid: target?.actor.uuid})
     }
     }
     postItemToChat(this, item, attackRoll, target?.actor, parseInt(inputBoons) || 0)

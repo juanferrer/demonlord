@@ -27,6 +27,7 @@ export function activateSocketListener() {
           const item = fromUuidSync(message.itemuuid)
           const actor = fromUuidSync(message.actoruuid)
           const character = fromUuidSync(message.characteruuid)
+          // eslint-disable-next-line no-unused-vars
           const token = canvas.tokens?.get(message.speaker.token)
           const body = item.getDLMacro()?.command
           const scriptFunction = Object.getPrototypeOf(async function () {}).constructor

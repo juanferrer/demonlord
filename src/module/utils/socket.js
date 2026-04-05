@@ -1,21 +1,51 @@
 /* global fromUuidSync */
+import { DLItemMacro } from '../item-macro/ItemMacro'
 export function activateSocketListener() {
   game.socket.on('system.demonlord', async (...[message]) => {
-    let actor = fromUuidSync(message.tokenuuid).actor
     // Execute it once if multiple GMs are connected.
     if (game.users.activeGM?.isSelf) {
       switch (message.request) {
         case 'createEffect':
-          await actor.createEmbeddedDocuments('ActiveEffect', [message.effectData])
+          {
+            let actor = fromUuidSync(message.tokenuuid).actor
+            await actor.createEmbeddedDocuments('ActiveEffect', [message.effectData])
+          }
           break
         case 'deleteEffect':
-          await actor.deleteEmbeddedDocuments('ActiveEffect', message.effectData)
+          {
+            let actor = fromUuidSync(message.tokenuuid).actor
+            await actor.deleteEmbeddedDocuments('ActiveEffect', message.effectData)
+          }
           break
         case 'increaseDamage':
-          await actor.increaseDamage(message.increment)
+          {
+            let actor = fromUuidSync(message.tokenuuid).actor
+            await actor.increaseDamage(message.increment)
+          }
           break
-        default:
-          break
+        case 'runMacro': {
+          const item = fromUuidSync(message.itemuuid)
+          const actor = fromUuidSync(message.actoruuid)
+          const character = fromUuidSync(message.characteruuid)
+          const token = canvas.tokens?.get(message.speaker.token)
+          const body = item.getDLMacro()?.command
+          const scriptFunction = Object.getPrototypeOf(async function () {}).constructor
+          const fn = new scriptFunction('item', 'speaker', 'actor', 'token', 'character', 'args', body)
+          //attempt script execution
+          try {
+            return await fn.bind(DLItemMacro)(
+              item,
+              message.speaker,
+              actor,
+              message.token,
+              character,
+              message.args,
+              body,
+            )
+          } catch (err) {
+            ui.notifications.error('DLItemMacro Execution failed')
+          }
+        }
       }
     }
   })

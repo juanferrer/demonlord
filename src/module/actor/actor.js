@@ -534,6 +534,7 @@ getTargetAttackBane(target) {
     // Get attacker attribute and defender attribute name
     let attackAttribute = item.system.action?.attack?.toLowerCase()
     const defenseAttribute = item.system.action?.against?.toLowerCase()
+    if (game.settings.get('demonlord', 'enableItemMacro')) await item.executeDLMacro({},{pass : 'preRollAttack', attackAttribute : attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: defender?.uuid})
 
     if (game.settings.get('demonlord', 'finesseAutoSelect') && attackAttribute === '' && item.system.properties?.toLowerCase().includes('finesse')) {
         if (this.system.attributes.strength.value > this.system.attributes.agility.value) attackAttribute = 'strength'
@@ -600,6 +601,12 @@ getTargetAttackBane(target) {
       hitTargets: hitTarget,
       attackRoll: attackRoll
     })
+
+    if (game.settings.get('demonlord', 'enableItemMacro')) {
+      const successfullHit = (defender && attackRoll?.total >= targetNumber) ? true : false
+      const plus20 = attackRoll?.total >= 20 && (targetNumber ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4) : true)
+      await item.executeDLMacro({},{pass : 'postRollAttack', attackRoll : attackRoll, targetNumber: targetNumber, successfullHit: successfullHit, plus20: plus20, targetActorUuid: defender?.uuid})
+    }
   }
 
   /**
@@ -776,6 +783,7 @@ getTargetAttackBane(target) {
     const target = targets[0]
     let attackRoll = null
 
+    if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'preRollTalent', targetActorUuid: target?.actor.uuid})
     if (!talentData?.action?.attack) {
       await this.activateTalent(talent, true)
     } else {
@@ -825,6 +833,7 @@ getTargetAttackBane(target) {
     })
 
     postTalentToChat(this, talent, attackRoll, target?.actor, parseInt(inputBoons) || 0, parseInt(inputModifier) || 0)
+    if (game.settings.get('demonlord', 'enableItemMacro')) await talent.executeDLMacro({},{pass : 'postRollTalent', attackRoll : attackRoll, targetActorUuid: target?.actor.uuid})
     return attackRoll
   }
 
@@ -869,6 +878,8 @@ getTargetAttackBane(target) {
     const defenseAttribute = spellData?.action?.against?.toLowerCase()
 
     let attackRoll
+    const targetActorUuid = (target.length) ? target[0].actor.uuid : null
+    if (game.settings.get('demonlord', 'enableItemMacro')) await spell.executeDLMacro({},{pass : 'preRollSpell', attackAttribute: attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: targetActorUuid})
     if (attackAttribute) {
       const attacker = this
 
@@ -936,6 +947,26 @@ getTargetAttackBane(target) {
       concentrate['statuses'] = [concentrate.id]
       ActiveEffect.create(concentrate, {parent: this})
     }
+
+    if (game.settings.get('demonlord', 'enableItemMacro')) {
+      let successfullHit = false
+      let targetNumber
+      if (target.length) {
+        const defender = target[0].actor
+        targetNumber =
+          defenseAttribute === 'defense'
+            ? defender?.system.characteristics.defense
+            : defender?.system.attributes[defenseAttribute]?.value || ''
+        successfullHit = defender && attackRoll?.total >= targetNumber ? true : false
+      }
+      const plus20 =
+        attackRoll?.total >= 20 &&
+        (targetNumber
+          ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4)
+          : true)
+      await spell.executeDLMacro( {}, { pass: 'postRollSpell', attackRoll: attackRoll, successfullHit: successfullHit, plus20: plus20, targetActorUuid: targetActorUuid, }, )
+    }
+
     return attackRoll
   }
 
@@ -990,11 +1021,13 @@ getTargetAttackBane(target) {
     let attackRoll = null
 
     if (!itemData?.action?.attack) {
+      if (game.settings.get('demonlord', 'enableItemMacro')) await item.executeDLMacro({},{pass : 'preRollItem', targetActorUuid: target?.actor.uuid})
       postItemToChat(this, item, null, null, null)
+      if (game.settings.get('demonlord', 'enableItemMacro')) await item.executeDLMacro({},{pass : 'postRollItem', targetActorUuid: target?.actor.uuid})
       return
     } else {
       const attackAttribute = itemData.action.attack.toLowerCase()
-      const defenseAttribute = itemData.action?.attack?.toLowerCase()
+      const defenseAttribute = itemData.action?.against?.toLowerCase()
       const attacker = this
 
       const modifiers = [
@@ -1019,6 +1052,7 @@ getTargetAttackBane(target) {
 
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
 
+      if (game.settings.get('demonlord', 'enableItemMacro')) await item.executeDLMacro({},{pass : 'preRollItemAttack', attackAttribute : attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: target?.actor.uuid})
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
       await attackRoll.evaluate()
 
@@ -1026,6 +1060,16 @@ getTargetAttackBane(target) {
         const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
         if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
       }
+    if (game.settings.get('demonlord', 'enableItemMacro')) {
+      const defender = target?.actor
+      const targetNumber =
+          defenseAttribute === 'defense'
+            ? defender?.system.characteristics.defense
+            : defender?.system.attributes[defenseAttribute]?.value || ''
+      const successfullHit = (target && attackRoll?.total >= targetNumber) ? true : false
+      const plus20 = attackRoll?.total >= 20 && (targetNumber ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4) : true)
+      await item.executeDLMacro({},{pass : 'postRollAttack', attackRoll : attackRoll, targetNumber: targetNumber, successfullHit: successfullHit, plus20: plus20, targetActorUuid: target?.actor.uuid})
+    }
     }
     postItemToChat(this, item, attackRoll, target?.actor, parseInt(inputBoons) || 0)
     return attackRoll

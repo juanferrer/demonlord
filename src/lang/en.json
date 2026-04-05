@@ -645,6 +645,8 @@
   "DL.SettingDSNLabel": "Dice So Nice! Settings",
   "DL.SettingDamageScrollText": "Enable Scroll Text for Damage/Health",
   "DL.SettingDamageScrollTextHint": "When checked, scrolling text appears above tokens about damage/heal value.",
+  "DL.SettingEnableItemMacro": "Enable Item Macro",
+  "DL.SettingEnableItemMacroHint": "When checked item macros will be executed.",
   "DL.SettingEnableQuickDraw": "Enable one-click draw for rolltables.",
   "DL.SettingEnableQuickDrawHint": "Draw directly form sidebar, compendia or sheets (right-click).",
   "DL.SettingFinesseAutoSelect": "Finesse weapon attack attribute auto select",

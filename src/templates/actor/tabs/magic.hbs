@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="col-2">{{dlLocalize "SpellType" system.spelltype}}</div>
+      <div class="col-2">{{dLocalizeWithSuffix "SpellType" system.spelltype}}</div>
       <div class="col-1">{{system.rank}}</div>
       <div class="col-1">
         {{defaultValue (plusify system.action.boonsbanes) 0}}
@@ -60,7 +60,7 @@
           <b>{{spell.name}}</b>
         </div>
         <div class="col-6" style="margin-right: 0;">
-          <b>{{spellbook.tradition}} {{dlLocalize "SpellType" system.spelltype}} {{system.rank}}</b>
+          <b>{{spellbook.tradition}} {{dLocalizeWithSuffix "SpellType" system.spelltype}} {{system.rank}}</b>
         </div>
       </div>
       <hr />

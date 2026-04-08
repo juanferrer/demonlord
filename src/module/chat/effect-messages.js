@@ -158,25 +158,18 @@ export function buildAttackEffectsMessage(attacker, defender, item, attackAttrib
   let attributeText = 'DL.Attribute' + capitalize(attackAttribute)
   let attributeModMsg = attributeMod ? _toMsg(`${game.i18n.localize(attributeText)}`, plusify(attributeMod)) : ''
 
-  let creatureType
-  if (game.settings.get('demonlord', 'optionalRuleTraitMode2025'))
-    creatureType =
-      defender?.system.frightening && defender?.system.horrifying
-        ? game.i18n.localize('DL.CreatureHorrifying')
-        : defender?.system.frightening
-        ? game.i18n.localize('DL.CreatureFrightening')
-        : defender?.system.horrifying
-        ? game.i18n.localize('DL.CreatureHorrifying')
-        : ''
-  else
-    creatureType =
-      defender?.system.frightening && defender?.system.horrifying
-        ? game.i18n.localize('DL.CreatureHorrifying') + '/' + game.i18n.localize('DL.CreatureFrightening')
-        : defender?.system.frightening
-        ? game.i18n.localize('DL.CreatureFrightening')
-        : defender?.system.horrifying
-        ? game.i18n.localize('DL.CreatureHorrifying')
-        : ''
+  let creatureType = ''
+  const isFrightening = defender?.system.frightening
+  const isHorrifying = defender?.system.horrifying
+  const isTraitMode2025 = game.settings.get('demonlord', 'optionalRuleTraitMode2025')
+
+  if ((isFrightening || isHorrifying) && isTraitMode2025) {
+      creatureType = isHorrifying ? game.i18n.localize('DL.CreatureHorrifying') : game.i18n.localize('DL.CreatureFrightening')
+  } else if (isFrightening && isHorrifying) {
+      creatureType = game.i18n.localize('DL.CreatureHorrifying') + '/' + game.i18n.localize('DL.CreatureFrightening')
+  } else if (isHorrifying) {
+      creatureType = game.i18n.localize('DL.CreatureHorrifying')
+  }
 
   const revealHorrifyingBane = game.settings.get('demonlord', 'optionalRuleRevealHorrifyingBane')
   // We add the correct effect and its bane(s) to the chatcard.

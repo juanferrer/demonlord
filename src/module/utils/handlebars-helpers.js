@@ -120,7 +120,7 @@ export function registerHandlebarsHelpers() {
     else return game.i18n.localize(tooltip)
   })
 
-  Handlebars.registerHelper('dlLocalize', function (groupName, str) {
+  Handlebars.registerHelper('dLocalizeWithSuffix', function (groupName, str) {
     let result
     switch (groupName) {
       case 'WeaponHands':

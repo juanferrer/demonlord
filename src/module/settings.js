@@ -979,4 +979,12 @@ export const registerSettings = function () {
     type: Boolean,
     config: true,
   })
+  game.settings.register('demonlord', 'enableItemMacro', {
+    name: game.i18n.localize('DL.SettingEnableItemMacro'),
+    hint: game.i18n.localize('DL.SettingEnableItemMacroHint'),
+    default: false,
+    scope: 'world',
+    type: Boolean,
+    config: true,
+  })
 }

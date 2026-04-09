@@ -239,6 +239,14 @@ calculateEncounterDifficulty(combatants) {
       }
     }
 
+    const trackerHeader = html.querySelector(".combat-tracker-header")
+    if (this.initiativeMethod === 's') {
+      if (game.combat?.turn === null)
+        trackerHeader.innerHTML = trackerHeader.innerHTML + `<div class="encounter-controls combat"><strong class="encounter-difficulty" data-rating="challenging">${game.i18n.localize('DL.TurnChooseTurn')}</strong></div>`
+      else
+        trackerHeader.innerHTML = trackerHeader.innerHTML + `<div class="encounter-controls combat"><class="encounter-difficulty">&nbsp;</div>`
+    }
+    
     html.querySelectorAll('.combatant')?.forEach(el => {
       // For each combatant in the tracker, change the initiative selector
       const combId = el.getAttribute('data-combatant-id')
@@ -247,6 +255,8 @@ calculateEncounterDifficulty(combatants) {
 
 
       const multipleCombatants = game.combat.getCombatantsByToken(combatant.token)
+      const title = (game.user.isGM || combatant.actor.isOwner) && game.combat?.turn === null ? i18n('DL.TurnChangeTurn') : ''
+      const style = (game.user.isGM || combatant.actor.isOwner) && game.combat?.turn === null ? 'font-weight: bold; cursor: pointer;' : 'font-weight: normal; cursor: auto; opacity: 0.5;'
 
       if (combatant.actor?.system.fastAndSlowTurn && multipleCombatants.length == 2) {
         // The combatant has a double initiative, so we display "Fast" and "Slow"
@@ -262,7 +272,7 @@ calculateEncounterDifficulty(combatants) {
 
         // Change initiative by clicking on the name
         if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML =
-          `<a class="combatant-control dlturnorder" title="${i18n('DL.TurnChangeTurn')}">${init}</a>`
+          `<a class="combatant-control dlturnorder" style="${style}" title="${title}">${init}</a>`
       }
 
       if (this.initiativeMethod === 'h' && game.user.isGM)
@@ -347,8 +357,7 @@ calculateEncounterDifficulty(combatants) {
       const combId = li.dataset.combatantId
       const combatant = combatants.get(combId)
       if (!combatant) return
-
-      if (game.user.isGM || combatant.actor.isOwner) {
+      if (game.user.isGM || (combatant.actor.isOwner && game.combat?.turn === null)) {
         await combatant.actor.update({'system.fastturn': !combatant.actor.system.fastturn})
         const initChatMessage = await createInitChatMessage(combatant, {})
         if (initChatMessage) ChatMessage.create(initChatMessage)

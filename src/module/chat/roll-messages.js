@@ -610,6 +610,7 @@ export async function postCustomTextToChat(actor, roll, options, attribute = {})
       break
   }
 
+  data['resultBoxClass'] = roll?.total ? roll.total >= targetNumber ? 'SUCCESS' : 'FAILURE' : ''
   data['actorInfo'] = buildActorInfo(actor)
   const rollMode = game.settings.get('core', 'rollMode')
   const chatData = getChatBaseData(actor, rollMode)

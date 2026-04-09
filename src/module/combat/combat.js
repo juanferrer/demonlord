@@ -256,10 +256,26 @@ async rollInitiativeGroup(ids, { formula = null, updateTurn = true, messageOptio
     })
   }
 
+  async allowTurnOrderChangeInTurns(_updated) {
+    if (game.settings.get('demonlord', 'optionalRuleInitiativeMode') !== 's') return
+    if (game.combat.getFlag('demonlord', 'allowTurnOrderChange') == undefined && _updated.current.turn === 0)
+    {
+      await game.combat.update({turn : null})
+      game.combat.setFlag('demonlord', 'allowTurnOrderChange', true)
+    } else if (_updated.current.turn > 0) game.combat.unsetFlag('demonlord', 'allowTurnOrderChange')
+  }
+
+  async allowTurnOrderChangeInRounds() {
+    if (game.settings.get('demonlord', 'optionalRuleInitiativeMode') !== 's') return
+    await game.combat.update({turn : null})
+    game.combat.setFlag('demonlord', 'allowTurnOrderChange', true)
+  }
+
   /** @override */
   async nextTurn() {
     const _updatedTurn = await super.nextTurn()
     await this._handleTurnEffects()
+    await this.allowTurnOrderChangeInTurns(_updatedTurn)
     return _updatedTurn
   }
 
@@ -267,6 +283,7 @@ async rollInitiativeGroup(ids, { formula = null, updateTurn = true, messageOptio
   async previousTurn() {
     const _updatedTurn = await super.previousTurn()
     await this._handleTurnEffects()
+    await this.allowTurnOrderChangeInTurns(_updatedTurn)
     return _updatedTurn
   }
 
@@ -282,6 +299,7 @@ async rollInitiativeGroup(ids, { formula = null, updateTurn = true, messageOptio
     }
     const _updatedRound = await super.nextRound()
     await this._handleTurnEffects()
+    await this.allowTurnOrderChangeInRounds()
     return _updatedRound
   }
 

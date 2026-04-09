@@ -180,8 +180,6 @@ export class DemonlordActor extends Actor {
       // Health and Healing Rate
       system.characteristics.health.max += system.attributes.strength.value
 
-
-
       // Armor
       system.characteristics.defense = (system.bonuses.armor.fixed || system.attributes.agility.value + system.bonuses.armor.agility) // + system.characteristics.defense // Applied as ActiveEffect further down
     }
@@ -189,6 +187,9 @@ export class DemonlordActor extends Actor {
     else {
       system.characteristics.defense = system.characteristics.defense || system.bonuses.armor.fixed || system.attributes.agility.value + system.bonuses.armor.agility
     }
+
+    // Insanity
+    if (this.type !== 'vehicle') system.characteristics.insanity.max += system.attributes.will.value
 
     // --- Valid for all type of actors
     // Healing Rate
@@ -200,8 +201,6 @@ export class DemonlordActor extends Actor {
     }
     // And then round down
     system.characteristics.health.healingrate = Math.floor(system.characteristics.health.healingrate)
-    // Insanity
-    system.characteristics.insanity.max += system.attributes.will.value
 
     // Final armor computation
     system.characteristics.defense += system.bonuses.armor.defense

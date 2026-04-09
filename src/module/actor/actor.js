@@ -592,7 +592,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
     }
 
     Hooks.call('DL.RollAttack', {
@@ -678,11 +679,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-      const doNotAnimate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? false: true
-      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextChallengeRoll') {
-        if (doNotAnimate) await effect?.delete({animate: false})
-          else await effect?.delete()
-      }
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextChallengeRoll') await effect?.delete({animate:animate})
     }
 
     return challengeRoll
@@ -737,7 +735,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
     }
 
     return attackRoll
@@ -823,7 +822,8 @@ getTargetAttackBane(target) {
 
       for (let effect of this.appliedEffects) {
         const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+        const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
       }
 
       if (itemMacroEnabled) {
@@ -945,7 +945,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
     }
 
     // Add concentration if it's in the spell duration
@@ -1081,7 +1082,8 @@ getTargetAttackBane(target) {
 
       for (let effect of this.appliedEffects) {
         const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+	      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
       }
     if (itemMacroEnabled) {
       const defender = target?.actor

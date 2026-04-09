@@ -171,7 +171,7 @@
   .tooltiptext {
     visibility: hidden;
     width: 260px;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 0.85);
     color: #fff;
     text-align: left;
     border: 1px solid rgba(0, 0, 0, 0.5);
@@ -180,7 +180,7 @@
     position: absolute;
     z-index: 1;
     left: 7px;
-    top: 24px;
+    top: -7px;
   }
 }
 
@@ -243,7 +243,7 @@
       .tooltiptext {
         display: block;
         width: 260px;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.85);
         color: #fff;
         text-align: left;
         border: 1px solid rgba(0, 0, 0, 0.5);
@@ -252,7 +252,7 @@
         position: relative;
         z-index: 1;
         left: -30px;
-        top: 10px;
+        top: -30px;
       }
     }
 

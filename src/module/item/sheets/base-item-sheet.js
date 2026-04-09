@@ -18,6 +18,7 @@ import {
   DamageType
 } from '../nested-objects';
 import { DLStatEditor } from '../../dialog/stat-editor'
+import { DLItemMacroConfig } from '../../item-macro/ItemMacroConfig'
 
 const { TextEditor } = foundry.applications.ux //eslint-disable-line no-shadow
 
@@ -722,6 +723,23 @@ export default class DLBaseItemSheet extends HandlebarsApplicationMixin(ItemShee
 
     // Autoselect text in inputs when focused
     e.querySelectorAll('input')?.forEach(el => el.addEventListener('focus', ev => ev.currentTarget.select()))
+
+    if (game.user.isGM && game.settings.get('demonlord', 'enableItemMacro')) {
+        const hasMacro = this.document.hasDLMacro()
+        const macroLink = {
+                style: hasMacro ? 'color: darkorange;text-shadow: 0 0 8px darkorange; cursor: pointer;' : 'color: var(--button-text-color); text-shadow: 0 0 8px var(--button-text-color); cursor: pointer;',
+                icon: "fa-solid fa-code",
+                tooltip: hasMacro ? game.i18n.localize("MACRO.Edit") : game.i18n.localize("SIDEBAR.ACTIONS.CREATE.Macro")
+          }
+
+        let macroLinkIndicator = `<macrolink class="${macroLink.icon}" style ="${macroLink.style}" data-tooltip="${macroLink.tooltip}"></macrolink>`
+        e.querySelector("macrolink")?.remove()
+        e.querySelector(".header-control")?.insertAdjacentHTML("beforebegin", macroLinkIndicator)
+        // eslint-disable-next-line no-unused-vars
+        e.querySelector("macrolink")?.addEventListener('click', async ev => {
+          DLItemMacroConfig.openConfig(this.document)
+        })
+    }
   }
 
   /* -------------------------------------------- */

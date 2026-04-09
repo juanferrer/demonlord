@@ -483,9 +483,9 @@ export class DemonlordActor extends Actor {
   	return result
   }
 
-  isImmuneToTarget(target) {
+  isFearRollCompleted(target) {
   	let actor = this
-  	const immuneArray = actor.appliedEffects.filter(x => x.name === game.i18n.format('DL.ImmuneToTarget', {
+  	const immuneArray = actor.appliedEffects.filter(x => x.name === game.i18n.format('DL.FearRollAgainst', {
   		creature: target.name
   	}))
   	let result = false
@@ -511,17 +511,19 @@ getTargetAttackBane(target) {
   const attacker = this
   if (!target) return 0
   if (!game.settings.get('demonlord', 'horrifyingBane') || attacker.isImmuneToAffliction('frightened')) return 0
-  const optionalRuleBaneValue = game.settings.get('demonlord', 'optionalRuleBaneValue') ? 1 : 2
   const ignoreLevelDependentBane =
     game.settings.get('demonlord', 'optionalRuleLevelDependentBane') &&
     ((attacker.system?.level >= 3 && attacker.system?.level <= 6 && target?.system?.difficulty <= 25) ||
       (attacker.system?.level >= 7 && target?.system?.difficulty <= 50)) ? false : true
   let baneValue = game.settings.get('demonlord', 'optionalRuleTraitMode2025')
-    ? (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && (target?.system.frightening || target?.system.horrifying) && !attacker.isImmuneToTarget(target) && 1) || 0
-    : (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && target?.system.horrifying && !attacker.isImmuneToTarget(target) && 1) || 0
+    ? (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && (target?.system.frightening || target?.system.horrifying) && 1) || 0
+    : (ignoreLevelDependentBane && !attacker.system.horrifying && !attacker.system.frightening && target?.system.horrifying && 1) || 0
 
   // Adjust bane if source of affliction can be seen, actor already has 1 (frightened), we need to add the difference
-  if (attacker.isFrightenedFrom(target)) baneValue += optionalRuleBaneValue
+  // 0 - no bane
+  // 1 - creature is horrifying, creature is frightening (only 2025 trtait mode)
+  // 2 - creature firhtened 
+  if (attacker.isFrightenedFrom(target)) baneValue += 2
   return baneValue
 }
 
@@ -535,11 +537,13 @@ getTargetAttackBane(target) {
     const attacker = this
     const defender = token ? token.actor : null
     let defenderToken = []
+    const itemMacroEnabled = game.settings.get('demonlord', 'enableItemMacro')
     if (token) defenderToken.push(token)
 
     // Get attacker attribute and defender attribute name
     let attackAttribute = item.system.action?.attack?.toLowerCase()
     const defenseAttribute = item.system.action?.against?.toLowerCase()
+    if (itemMacroEnabled) await item.executeDLMacro({},{pass : 'preRollAttack', attackAttribute : attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: defender?.uuid})
 
     if (game.settings.get('demonlord', 'finesseAutoSelect') && attackAttribute === '' && item.system.properties?.toLowerCase().includes('finesse')) {
         if (this.system.attributes.strength.value > this.system.attributes.agility.value) attackAttribute = 'strength'
@@ -606,6 +610,12 @@ getTargetAttackBane(target) {
       hitTargets: hitTarget,
       attackRoll: attackRoll
     })
+
+    if (itemMacroEnabled) {
+      const successfullHit = (defender && attackRoll?.total >= targetNumber) ? true : false
+      const plus20 = attackRoll?.total >= 20 && (targetNumber ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4) : true)
+      await item.executeDLMacro({},{pass : 'postRollAttack', attackRoll : attackRoll, targetNumber: targetNumber, successfullHit: successfullHit, plus20: plus20, targetActorUuid: defender?.uuid})
+    }
   }
 
   /**
@@ -780,15 +790,18 @@ getTargetAttackBane(target) {
     const talentData = talent.system
     const targets = tokenManager.targets
     const target = targets[0]
+    const itemMacroEnabled = game.settings.get('demonlord', 'enableItemMacro')
     let attackRoll = null
 
     if (!talentData?.action?.attack) {
+      if (itemMacroEnabled) await talent.executeDLMacro({},{pass : 'preRollTalent', targetActorUuid: target?.actor.uuid})
       await this.activateTalent(talent, true)
+      if (itemMacroEnabled) await talent.executeDLMacro({},{pass : 'postRollTalent', targetActorUuid: target?.actor.uuid})
     } else {
       await this.activateTalent(talent, Boolean(talentData.action?.damageActive))
 
       const attackAttribute = talentData.action.attack.toLowerCase()
-      const defenseAttribute = talentData.action?.attack?.toLowerCase()
+      const defenseAttribute = talentData.action?.against?.toLowerCase()
       const attacker = this
 
       const modifiers = [
@@ -812,7 +825,7 @@ getTargetAttackBane(target) {
           this.getTargetAttackBane(target.actor))
 
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
-
+      if (itemMacroEnabled) await talent.executeDLMacro({},{pass : 'preRollTalent', attackAttribute: attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: target?.actor.uuid})
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
       await attackRoll.evaluate()
 
@@ -821,6 +834,25 @@ getTargetAttackBane(target) {
         if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
       }
 
+      if (itemMacroEnabled) {
+        let successfullHit = false
+        let targetNumber
+        if (targets.length) {
+          const defender = target.actor
+          targetNumber =
+            defenseAttribute === 'defense'
+              ? defender?.system.characteristics.defense
+              : defender?.system.attributes[defenseAttribute]?.value || ''
+          successfullHit = defender && attackRoll?.total >= targetNumber ? true : false
+        }
+        const plus20 =
+          attackRoll?.total >= 20 &&
+          (targetNumber
+            ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4)
+            : true)
+
+          await talent.executeDLMacro({},{pass : 'postRollTalent', attackRoll: attackRoll, targetNumber: targetNumber,  successfullHit: successfullHit, plus20: plus20, targetActorUuid: target?.actor.uuid})
+        }
     }
 
     Hooks.call('DL.UseTalent', {
@@ -873,8 +905,11 @@ getTargetAttackBane(target) {
     const spellData = spell.system
     const attackAttribute = spellData?.action?.attack?.toLowerCase()
     const defenseAttribute = spellData?.action?.against?.toLowerCase()
+    const itemMacroEnabled = game.settings.get('demonlord', 'enableItemMacro')
 
     let attackRoll
+    const targetActorUuid = (target.length) ? target[0].actor.uuid : null
+    if (itemMacroEnabled) await spell.executeDLMacro({},{pass : 'preRollSpell', attackAttribute: attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: targetActorUuid})
     if (attackAttribute) {
       const attacker = this
 
@@ -942,6 +977,26 @@ getTargetAttackBane(target) {
       concentrate['statuses'] = [concentrate.id]
       ActiveEffect.create(concentrate, {parent: this})
     }
+
+    if (itemMacroEnabled) {
+      let successfullHit = false
+      let targetNumber
+      if (target.length) {
+        const defender = target[0].actor
+        targetNumber =
+          defenseAttribute === 'defense'
+            ? defender?.system.characteristics.defense
+            : defender?.system.attributes[defenseAttribute]?.value || ''
+        successfullHit = defender && attackRoll?.total >= targetNumber ? true : false
+      }
+      const plus20 =
+        attackRoll?.total >= 20 &&
+        (targetNumber
+          ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4)
+          : true)
+      await spell.executeDLMacro( {}, { pass: 'postRollSpell', attackRoll: attackRoll, successfullHit: successfullHit, plus20: plus20, targetActorUuid: targetActorUuid, }, )
+    }
+
     return attackRoll
   }
 
@@ -994,13 +1049,16 @@ getTargetAttackBane(target) {
     const targets = tokenManager.targets
     const target = targets[0]
     let attackRoll = null
+    const itemMacroEnabled = game.settings.get('demonlord', 'enableItemMacro')
 
     if (!itemData?.action?.attack) {
+      if (itemMacroEnabled) await item.executeDLMacro({},{pass : 'preRollItem', targetActorUuid: target?.actor.uuid})
       postItemToChat(this, item, null, null, null)
+      if (itemMacroEnabled) await item.executeDLMacro({},{pass : 'postRollItem', targetActorUuid: target?.actor.uuid})
       return
     } else {
       const attackAttribute = itemData.action.attack.toLowerCase()
-      const defenseAttribute = itemData.action?.attack?.toLowerCase()
+      const defenseAttribute = itemData.action?.against?.toLowerCase()
       const attacker = this
 
       const modifiers = [
@@ -1025,6 +1083,7 @@ getTargetAttackBane(target) {
 
       const boonsReroll = parseInt(this.system.bonuses.rerollBoon1Dice)
 
+      if (itemMacroEnabled) await item.executeDLMacro({},{pass : 'preRollItem', attackAttribute : attackAttribute, defenseAttribute: defenseAttribute, targetActorUuid: target?.actor.uuid})
       attackRoll = new Roll(this.rollFormula(modifiers, boons, boonsReroll), this.system)
       await attackRoll.evaluate()
 
@@ -1032,6 +1091,16 @@ getTargetAttackBane(target) {
         const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
         if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
       }
+    if (itemMacroEnabled) {
+      const defender = target?.actor
+      const targetNumber =
+          defenseAttribute === 'defense'
+            ? defender?.system.characteristics.defense
+            : defender?.system.attributes[defenseAttribute]?.value || ''
+      const successfullHit = (target && attackRoll?.total >= targetNumber) ? true : false
+      const plus20 = attackRoll?.total >= 20 && (targetNumber ? attackRoll?.total > targetNumber + (game.settings.get('demonlord', 'optionalRuleExceedsByFive') ? 5 : 4) : true)
+      await item.executeDLMacro({},{pass : 'preRollItem', attackRoll : attackRoll, targetNumber: targetNumber, successfullHit: successfullHit, plus20: plus20, targetActorUuid: target?.actor.uuid})
+    }
     }
     postItemToChat(this, item, attackRoll, target?.actor, parseInt(inputBoons) || 0)
     return attackRoll
@@ -1098,7 +1167,8 @@ getTargetAttackBane(target) {
       } else ui.notifications.warn(game.i18n.localize('DL.DialogWarningActorImmuneFrightened'))
     } else {
       const frightenedEffect = actor.effects.find(e => e.statuses?.has('frightened'))
-      await frightenedEffect.update({ 'duration.rounds': newValue })
+      // Only update effect duration if lasts longer than the current one
+      if ((frightenedEffect.duration.startTime + frightenedEffect.duration.rounds * 10) < (game.time.worldTime + newValue * 10)) await frightenedEffect.update({ 'duration.rounds': newValue })
       if (!isStunned) await stunnedChallengeRoll()
     }
     if (actor.system.characteristics.insanity.value === actor.system.characteristics.insanity.max) await this.goingMad()
@@ -1216,18 +1286,10 @@ getTargetAttackBane(target) {
               }),
             )
 
-          const traitType =
-            targets[0].actor.system.frightening && targets[0].actor.system.horrifying ?
-            game.i18n.localize('DL.CreatureHorrifying').toLowerCase() :
-            targets[0].actor.system.frightening ?
-            game.i18n.localize('DL.CreatureFrightening').toLowerCase() :
-            game.i18n.localize('DL.CreatureHorrifying').toLowerCase()
-
-          if (this.isImmuneToTarget(targets[0].actor))
+          if (this.isFearRollCompleted(targets[0].actor))
             return ui.notifications.warn(
-              game.i18n.format('DL.DialogWarningAlreadyMadeWILLImmune', {
-                creature: targets[0].actor.name,
-                trait: traitType
+              game.i18n.format('DL.DialogWarningAlreadyMadeWILL', {
+                creature: targets[0].actor.name
               }),
             )
         }
@@ -1235,7 +1297,7 @@ getTargetAttackBane(target) {
         const validTargetArray = targets.filter(
           target =>
           (target.actor.system.horrifying || target.actor.system.frightening) &&
-          !actor.isImmuneToTarget(target.actor) &&
+          !actor.isFearRollCompleted(target.actor) &&
           !ignoreTarget(target.actor),
         )
 
@@ -1247,9 +1309,9 @@ getTargetAttackBane(target) {
 
         for (const target of validTargetArray) {
           content += `&bull; ${target.actor.name}<br>`
-          if (target.actor.system.horrifying && !actor.isImmuneToTarget(target.actor) && !ignoreTarget(target.actor))
+          if (target.actor.system.horrifying && !actor.isFearRollCompleted(target.actor) && !ignoreTarget(target.actor))
             isHorrifying = true
-          if (target.actor.system.frightening && !actor.isImmuneToTarget(target.actor) && !ignoreTarget(target.actor))
+          if (target.actor.system.frightening && !actor.isFearRollCompleted(target.actor) && !ignoreTarget(target.actor))
             isFrightening = true
         }
 
@@ -1264,7 +1326,7 @@ getTargetAttackBane(target) {
         const question = validTargetArray.length === 1 ? game.i18n.localize('DL.DialogDoYouSeeThisCreatureFirstTime') : game.i18n.localize('DL.DialogDoYouSeeTheseCreaturesFirstTime')
         const isLineOfSight = await foundry.applications.api.DialogV2.confirm({
           window: {
-            title: game.i18n.localize('DL.LookOutCreatures'),
+            title: game.i18n.localize('DL.FearRoll'),
           },
           content: question + content,
           position: {
@@ -1411,10 +1473,10 @@ getTargetAttackBane(target) {
           }
 
           const imuneToFrightenedEffect = new ActiveEffect({
-            name: game.i18n.format('DL.ImmuneToTarget', {
+            name: game.i18n.format('DL.FearRollAgainst', {
               creature: target.actor.name
             }),
-            icon: 'systems/demonlord/assets/icons/effects/immune.svg',
+            icon: 'systems/demonlord/assets/ui/other-svg/dice-twenty-faces-twenty.svg',
             duration: {
               rounds: 1,
             },
@@ -1424,9 +1486,6 @@ getTargetAttackBane(target) {
                 specialDuration: 'RestComplete',
               },
             },
-            description: game.i18n.format('DL.ImmuneToHorrifyingOneMinute', {
-              creature: target.actor.name
-            }),
             origin: target.actor.uuid
           })
 
@@ -1445,9 +1504,9 @@ getTargetAttackBane(target) {
                 target: targets[0].actor.name
               }),
             )
-          if (this.isImmuneToTarget(targets[0].actor))
+          if (this.isFearRollCompleted(targets[0].actor))
             return ui.notifications.warn(
-              game.i18n.format('DL.DialogWarningAlreadyMadeWILLImmune', {
+              game.i18n.format('DL.DialogWarningAlreadyMadeWILL', {
                 creature: targets[0].actor.name,
                 trait: game.i18n.localize('DL.CreatureHorrifying').toLowerCase()
               }),
@@ -1467,7 +1526,7 @@ getTargetAttackBane(target) {
             !target.actor.system.horrifying ||
             ignoreTarget(target.actor) ||
             actor.isFrightenedFrom(target.actor) ||
-            actor.isImmuneToTarget(target.actor)
+            actor.isFearRollCompleted(target.actor)
           ),
         )
         if (validTargetArray.length === 0) return ui.notifications.warn(game.i18n.localize('DL.DialogWarningInvalidTarget'))
@@ -1480,7 +1539,7 @@ getTargetAttackBane(target) {
         const question = validTargetArray.length === 1 ? game.i18n.localize('DL.DialogDoYouStartYourTurnWithLOSCreature') : game.i18n.localize('DL.DialogDoYouStartYourTurnWithLOSCreatures')
         const isLineOfSight = await foundry.applications.api.DialogV2.confirm({
           window: {
-            title: game.i18n.localize('DL.LookOutCreatures'),
+            title: game.i18n.localize('DL.FearRoll'),
           },
           content: question + content,
           position: {
@@ -1552,10 +1611,10 @@ getTargetAttackBane(target) {
 
           if (roll.total >= targetNumber) {
             const imuneToFrightenedEffect = new ActiveEffect({
-              name: game.i18n.format('DL.ImmuneToTarget', {
+              name: game.i18n.format('DL.FearRollAgainst', {
                 creature: target.actor.name
               }),
-              icon: 'systems/demonlord/assets/icons/effects/immune.svg',
+              icon: 'systems/demonlord/assets/ui/other-svg/dice-twenty-faces-twenty.svg',
               duration: {
                 rounds: 6,
               },

@@ -37,10 +37,10 @@ function prepareReminderHTML(text)
 if (game.settings.get('demonlord', 'launchDialogReminder')) {
   if (targets.length === 1 && (targets[0]?.actor.system.horrifying || targets[0]?.actor.system.frightening)) {
     if (actor.isFrightenedFrom(targets[0]?.actor)) content += `<fieldset><div style="color: orange; text-align: center;"><b>${game.i18n.localize('DL.YouAreAttackingSoureceOfFrightenedAffliction')}</b></div></fieldset>`
-    else if (actor.isImmuneToTarget(targets[0]?.actor)) {
-      if (!game.settings.get('demonlord', 'optionalRuleTraitMode2025')) content += prepareReminderHTML(game.i18n.localize('DL.YouCannotBeAffectedUntilYouCompleteARest'))
-      else {
-        const immuneArray = actor.appliedEffects.filter(x => x.name === game.i18n.format('DL.ImmuneToTarget', {
+    else if (actor.isFearRollCompleted(targets[0]?.actor)) {
+      if (game.settings.get('demonlord', 'optionalRuleTraitMode2025'))
+        {
+        const immuneArray = actor.appliedEffects.filter(x => x.name === game.i18n.format('DL.FearRollAgainst', {
           creature: targets[0].actor.name
         }))
         let effect
@@ -49,12 +49,12 @@ if (game.settings.get('demonlord', 'launchDialogReminder')) {
         }
         if (game.combat) {
           const remainingRounds = calcEffectRemainingRounds(effect, game.combat.round)
-          const immuneText = (remainingRounds === 1) ? game.i18n.localize('DL.ImmunityLastsUntilTheEndOfNextRound') : (remainingRounds === 0) ? game.i18n.localize('DL.ImmunityLastsUntilTheEndOfTheRound') : game.i18n.format('DL.ImmunityLastsRounds', {
+          const immuneText = (remainingRounds === 1) ? game.i18n.localize('DL.FearRollLastsUntilTheEndOfNextRound') : (remainingRounds === 0) ? game.i18n.localize('DL.FearRollLastsUntilTheEndOfTheRound') : game.i18n.format('DL.FearRollLastsRounds', {
             rounds: remainingRounds
           })
           content += prepareReminderHTML(immuneText)
         } else {
-          content += prepareReminderHTML(game.i18n.format('DL.ImmunityLastsSeconds', {
+          content += prepareReminderHTML(game.i18n.format('DL.FearRollLastsSeconds', {
             seconds: calcEffectRemainingSeconds(effect, game.time.worldTime)
           }))
         }
@@ -62,7 +62,7 @@ if (game.settings.get('demonlord', 'launchDialogReminder')) {
     }
 
     const ignoreLevelDependentBane = (game.settings.get('demonlord', 'optionalRuleLevelDependentBane') && ((actor.system?.level >= 3 && actor.system?.level <= 6 && targets[0]?.actor.system?.difficulty <= 25) || (actor.system?.level >= 7 && targets[0]?.actor.system?.difficulty <= 50))) ? false : true
-    if (!actor.isFrightenedFrom(targets[0]?.actor) && !actor.isImmuneToTarget(targets[0]?.actor) && !actor.isImmuneToAffliction('frightened') && ignoreLevelDependentBane) {
+    if (!actor.isFrightenedFrom(targets[0]?.actor) && !actor.isFearRollCompleted(targets[0]?.actor) && !actor.isImmuneToAffliction('frightened') && ignoreLevelDependentBane) {
       if (game.settings.get('demonlord', 'optionalRuleTraitMode2025') && targets[0]?.actor.system.horrifying)
         content += prepareReminderHTML(game.i18n.localize('DL.YouHaventMadeWillChallengeRollAgainstTarget'))
       else if (

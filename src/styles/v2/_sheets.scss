@@ -951,6 +951,13 @@ span.text-vs {
     &.off {
       opacity: 1;
     }
+    &.on_disabled {
+      opacity: 0;
+    }
+
+    &.off_disabled {
+      opacity: 0.5;
+    }
   }
 
   .toggleInput:checked ~ .toggleText {
@@ -959,6 +966,13 @@ span.text-vs {
     }
 
     &.off {
+      opacity: 0;
+    }
+    &.on_disabled {
+      opacity: 0.5;
+    }
+
+    &.off_disabled {
       opacity: 0;
     }
   }

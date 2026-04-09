@@ -2,6 +2,7 @@ import {deleteActorNestedItems, PathLevel} from './nested-objects'
 import {DemonlordActor} from '../actor/actor'
 import { DLEndOfRound } from '../dialog/endofround'
 import { getChatBaseData } from '../chat/base-messages'
+import { DLItemMacro } from '../item-macro/ItemMacro'
 
 export class DemonlordItem extends Item {
   /** @override */
@@ -215,4 +216,29 @@ export class DemonlordItem extends Item {
 
     return ancestry
   }
+
+  getDLMacro() {
+    const hasMacro = this.hasDLMacro()
+    const flag = this.getFlag('demonlord', 'macro')
+    if (hasMacro) return new DLItemMacro(flag, { item: this })
+    return new DLItemMacro({ img: this.img, name: this.name, scope: 'global', type: 'script' }, { item: this })
+  }
+
+  hasDLMacro() {
+    const flag = this.getFlag('demonlord', 'macro')
+    return !!flag?.command
+  }
+
+  async setDLMacro(macro) {
+    if (macro instanceof DLItemMacro) {
+      const data = macro.toObject()
+      return await this.setFlag('demonlord', 'macro', data)
+    }
+  }
+
+  executeDLMacro(scope = {}, args = null) {
+    if (!this.hasDLMacro()) return
+    return this.getDLMacro().execute(scope, args)
+  }
+
 }

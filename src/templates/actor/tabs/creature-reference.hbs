@@ -2,7 +2,11 @@
   <div class="dl-creature-title row">
     <div class="col-6">{{actor.name}}</div>
     <div class="col-6" style="margin-right: 0; margin-left: auto">
-      {{localize "DL.CreatureDifficulty"}} {{system.difficulty}}
+      {{#unless (eq actor.type 'vehicle')}}
+        {{localize "DL.CreatureDifficulty"}} {{system.difficulty}}
+      {{else}}
+        {{localize "DL.VehiclePrice"}} {{system.price}}
+      {{/unless}}
     </div>
   </div>
   <div class="dl-creature-sub-title">
@@ -17,29 +21,33 @@
   <!-- STATS AND TRAITS -->
   <div class="dl-creature-section-section">
     <div>
-      {{#if system.attributes.perception.immune}}
-        <b>{{localize "DL.AttributePerception"}}</b> –&nbsp;;
-      {{else}}
-        <b>{{localize "DL.AttributePerception"}}</b>&nbsp; {{system.attributes.perception.value}} ({{plusify system.attributes.perception.modifier}});
-      {{/if}}
-      {{system.perceptionsenses}}
+      {{#unless (eq actor.type 'vehicle')}}
+        {{#if system.attributes.perception.immune}}
+          <b>{{localize "DL.AttributePerception"}}</b> –&nbsp;;
+        {{else}}
+          <b>{{localize "DL.AttributePerception"}}</b>&nbsp; {{system.attributes.perception.value}} ({{plusify system.attributes.perception.modifier}});
+        {{/if}}
+        {{system.perceptionsenses}}
+      {{/unless}}
     </div>
     <div>
       <b>{{localize "DL.ArmorDefense"}}</b> {{system.characteristics.defense}}{{#if system.armor}}
       ({{system.armor}}){{/if}};&nbsp;
       <b>{{localize "DL.CreatureHealth"}}</b> {{system.characteristics.health.max}};&nbsp;
-      <b>{{localize "DL.CharInsanity"}}</b>
-      {{#if system.characteristics.insanity.immune}}
-        –;&nbsp;
-      {{else}}
-        {{system.characteristics.insanity.value}};&nbsp;
-      {{/if}}
-      <b>{{localize "DL.CharCorruption"}}</b>
-      {{#if system.characteristics.corruption.immune}}
-        –&nbsp;
-      {{else}}
-        {{system.characteristics.corruption.value}}&nbsp;
-      {{/if}}
+      {{#unless (eq actor.type 'vehicle')}}
+        <b>{{localize "DL.CharInsanity"}}</b>
+        {{#if system.characteristics.insanity.immune}}
+          –;&nbsp;
+        {{else}}
+          {{system.characteristics.insanity.value}};&nbsp;
+        {{/if}}
+        <b>{{localize "DL.CharCorruption"}}</b>
+        {{#if system.characteristics.corruption.immune}}
+          –&nbsp;
+        {{else}}
+          {{system.characteristics.corruption.value}}&nbsp;
+        {{/if}}
+      {{/unless}}
     </div>
     <div>
       {{#if system.attributes.strength.immune}}
@@ -64,8 +72,19 @@
       {{/if}}
     </div>
     <div>
-      <b>{{localize "DL.CharSpeed"}}</b> {{system.characteristics.speed}}
-      {{system.speedtraits}}
+      {{#unless (eq actor.type 'vehicle')}}
+        <b>{{localize "DL.CharSpeed"}}</b> {{system.characteristics.speed}}
+        {{system.speedtraits}}
+      {{else}}
+        <b>{{localize "DL.VehicleSpace"}}</b> {{system.space}} <b>{{localize "DL.VehicleMaximumSpeed"}}</b> {{system.maximumspeed}};
+        {{system.speedtraits}}
+        <div>
+          <b>{{localize "DL.VehicleCrew"}}</b> {{system.crew}}
+        </div>
+        <div>
+          <b>{{localize "DL.VehicleCargo"}}</b> {{system.cargo}}
+        </div>
+      {{/unless}}
     </div>
     {{#each actor.features as |item id|}}
       {{#unless (dlHideItem2025Trait item.name)}}

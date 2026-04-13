@@ -180,8 +180,6 @@ export class DemonlordActor extends Actor {
       // Health and Healing Rate
       system.characteristics.health.max += system.attributes.strength.value
 
-
-
       // Armor
       system.characteristics.defense = (system.bonuses.armor.fixed || system.attributes.agility.value + system.bonuses.armor.agility) // + system.characteristics.defense // Applied as ActiveEffect further down
     }
@@ -189,6 +187,9 @@ export class DemonlordActor extends Actor {
     else {
       system.characteristics.defense = system.characteristics.defense || system.bonuses.armor.fixed || system.attributes.agility.value + system.bonuses.armor.agility
     }
+
+    // Insanity
+    if (this.type !== 'vehicle') system.characteristics.insanity.max += system.attributes.will.value
 
     // --- Valid for all type of actors
     // Healing Rate
@@ -600,7 +601,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
     }
 
     Hooks.call('DL.RollAttack', {
@@ -686,11 +688,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-      const doNotAnimate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? false: true
-      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextChallengeRoll') {
-        if (doNotAnimate) await effect?.delete({animate: false})
-          else await effect?.delete()
-      }
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextChallengeRoll') await effect?.delete({animate:animate})
     }
 
     return challengeRoll
@@ -745,7 +744,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
     }
 
     return attackRoll
@@ -831,7 +831,8 @@ getTargetAttackBane(target) {
 
       for (let effect of this.appliedEffects) {
         const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+        const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
       }
 
       if (itemMacroEnabled) {
@@ -953,7 +954,8 @@ getTargetAttackBane(target) {
 
     for (let effect of this.appliedEffects) {
       const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+      if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
     }
 
     // Add concentration if it's in the spell duration
@@ -1089,7 +1091,8 @@ getTargetAttackBane(target) {
 
       for (let effect of this.appliedEffects) {
         const specialDuration = foundry.utils.getProperty(effect, `flags.${game.system.id}.specialDuration`)
-        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete()
+	      const animate = foundry.utils.getProperty(effect, `flags.${game.system.id}.doNotAnimate`) === undefined ? true: false
+        if (specialDuration === 'NextD20Roll' || specialDuration === 'NextAttackRoll') await effect?.delete({animate:animate})
       }
     if (itemMacroEnabled) {
       const defender = target?.actor

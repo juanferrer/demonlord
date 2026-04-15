@@ -201,6 +201,16 @@ export class DemonlordActor extends Actor {
     }
     // And then round down
     system.characteristics.health.healingrate = Math.floor(system.characteristics.health.healingrate)
+    // Insanity
+    if (!system.characteristics.insanity) {
+      system.characteristics.insanity = {
+        min: 0,
+        max: 0,
+        value: 0,
+        immune: 0
+      }
+    }
+    system.characteristics.insanity.max += system.attributes.will.value
 
     // Final armor computation
     system.characteristics.defense += system.bonuses.armor.defense
@@ -324,7 +334,7 @@ export class DemonlordActor extends Actor {
 
       // Also, if any of the effects in the document contains an affliction, activate it
       if (['character', 'creature'].includes(this.type)) {
-        const effects = doc.effects.filter(e => e.changes.some(c => c.key === 'system.maluses.affliction'))
+        const effects = doc.effects.filter(e => e.transfer && e.changes.some(c => c.key === 'system.maluses.affliction'))
         for (const activeEffect of effects) {
           const changes = activeEffect.changes
           for (const affliction of changes.filter(c => c.key === 'system.maluses.affliction')) {
@@ -397,7 +407,7 @@ export class DemonlordActor extends Actor {
     // Also, if any of the effects in the deleted documents contains an affliction (and it's the last instance of this affliction), remove it
     if (['character', 'creature'].includes(this.type)) {
       for (const doc of documents.filter(d => d.effects?.some(e => e.changes?.some(c => c.key === 'system.maluses.affliction')))) {
-        const effects = doc.effects.filter(e => e.changes?.some(c => c.key === 'system.maluses.affliction'))
+        const effects = doc.effects.filter(e => e.transfer && e.changes?.some(c => c.key === 'system.maluses.affliction'))
         for (const activeEffect of effects) {
           const changes = activeEffect.changes
           for (const affliction of changes.filter(c => c.key === 'system.maluses.affliction')) {

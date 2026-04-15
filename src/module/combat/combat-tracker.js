@@ -238,40 +238,31 @@ calculateEncounterDifficulty(combatants) {
       }
     }
 
-    const trackerHeader = html.querySelector(".combat-tracker-header")
-    if (this.initiativeMethod === 's') {
-      if (game.combat?.turn === null)
-        trackerHeader.innerHTML = trackerHeader.innerHTML + `<div class="encounter-controls combat"><strong class="encounter-difficulty" data-rating="challenging">${game.i18n.localize('DL.TurnChooseTurn')}</strong></div>`
-      else
-        trackerHeader.innerHTML = trackerHeader.innerHTML + `<div class="encounter-controls combat"><class="encounter-difficulty">&nbsp;</div>`
-    }
-    
     html.querySelectorAll('.combatant')?.forEach(el => {
       // For each combatant in the tracker, change the initiative selector
       const combId = el.getAttribute('data-combatant-id')
       const combatant = combatants.get(combId)
       if (!combatant) return
 
+      if (!game.modules.get('lancer-initiative')) {
+        const multipleCombatants = game.combat.getCombatantsByToken(combatant.token)
 
-      const multipleCombatants = game.combat.getCombatantsByToken(combatant.token)
-      const title = (game.user.isGM || combatant.actor.isOwner) && game.combat?.turn === null ? i18n('DL.TurnChangeTurn') : ''
-      const style = (game.user.isGM || combatant.actor.isOwner) && game.combat?.turn === null ? 'font-weight: bold; cursor: pointer;' : 'font-weight: normal; cursor: auto; opacity: 0.5;'
+        if (combatant.actor?.system.fastAndSlowTurn && multipleCombatants.length == 2) {
+          // The combatant has a double initiative, so we display "Fast" and "Slow"
+          init = combatant._id === multipleCombatants[0]._id
+            ? game.i18n.localize('DL.TurnSlow')
+            : game.i18n.localize('DL.TurnFast')
+          // Display only
+          if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML = `<span class="combatant-control dlturnorder">${init}</span>`
+        } else {
+          init = combatant.actor?.system.fastturn
+            ? game.i18n.localize('DL.TurnFast')
+            : game.i18n.localize('DL.TurnSlow')
 
-      if (combatant.actor?.system.fastAndSlowTurn && multipleCombatants.length == 2) {
-        // The combatant has a double initiative, so we display "Fast" and "Slow"
-        init = combatant._id === multipleCombatants[0]._id
-          ? game.i18n.localize('DL.TurnSlow')
-          : game.i18n.localize('DL.TurnFast')
-        // Display only
-        if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML = `<span class="combatant-control dlturnorder">${init}</span>`
-      } else {
-        init = combatant.actor?.system.fastturn
-          ? game.i18n.localize('DL.TurnFast')
-          : game.i18n.localize('DL.TurnSlow')
-
-        // Change initiative by clicking on the name
-        if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML =
-          `<a class="combatant-control dlturnorder" style="${style}" title="${title}">${init}</a>`
+          // Change initiative by clicking on the name
+          if (this.initiativeMethod === 's') el.getElementsByClassName('token-initiative')[0].innerHTML =
+            `<a class="combatant-control dlturnorder" title="${i18n('DL.TurnChangeTurn')}">${init}</a>`
+        }
       }
 
       if (this.initiativeMethod === 'h' && game.user.isGM)
@@ -324,7 +315,18 @@ calculateEncounterDifficulty(combatants) {
       if (game.user.isGM) {
         const hasActedButton = document.createElement('button')
         hasActedButton.type = 'button'
-        hasActedButton.className = 'inline-control combatant-control icon fa-solid fa-hourglass-start'
+        hasActedButton.className = 'inline-control combatant-control icon fa-solid'
+
+        const hasActed = combatant.getFlag('demonlord', 'hasActed')
+
+        if (hasActed) {
+          hasActedButton.classList.add('fa-hourglass-end')
+          el.classList.add('hide')
+        } else {
+          hasActedButton.classList.add('fa-hourglass-start')
+          el.classList.remove('hide')
+        }
+
         hasActedButton.setAttribute('data-action', 'toggleActed')
         hasActedButton.setAttribute('data-tooltip', '')
         hasActedButton.setAttribute('aria-label', game.i18n.localize('DL.ToggleActed'))
@@ -356,7 +358,8 @@ calculateEncounterDifficulty(combatants) {
       const combId = li.dataset.combatantId
       const combatant = combatants.get(combId)
       if (!combatant) return
-      if (game.user.isGM || (combatant.actor.isOwner && game.combat?.turn === null)) {
+
+      if (game.user.isGM || combatant.actor.isOwner) {
         await combatant.actor.update({'system.fastturn': !combatant.actor.system.fastturn})
         const initChatMessage = await createInitChatMessage(combatant, {})
         if (initChatMessage) ChatMessage.create(initChatMessage)
@@ -405,12 +408,16 @@ calculateEncounterDifficulty(combatants) {
   }
 
   static async onToggleActed(event) {
-    const button = event.target.closest('.inline-control')
-    const combatant = event.target.closest('.combatant')
+    const buttonElement = event.target.closest('.inline-control')
+    const combatantElement = event.target.closest('.combatant')
 
-    button.classList.toggle('fa-hourglass-start')
-    button.classList.toggle('fa-hourglass-end')
-    combatant.classList.toggle('hide')
+    buttonElement.classList.toggle('fa-hourglass-start')
+    buttonElement.classList.toggle('fa-hourglass-end')
+    combatantElement.classList.toggle('hide')
+
+    const combatant = game.combat.combatants.get(combatantElement.dataset.combatantId)
+
+    await combatant.setFlag('demonlord', 'hasActed', buttonElement.classList.contains('fa-hourglass-end'))
   }
 
   async _onToggleHidden(combatant) {

@@ -1207,7 +1207,7 @@ getTargetAttackBane(target) {
         changes: [{
           key: 'system.bonuses.challenge.boons.will',
           value: -1,
-          mode: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+          mode: 'add',
         }, ],
         expiry: 'NextChallengeRoll'
       })
@@ -1239,7 +1239,7 @@ getTargetAttackBane(target) {
             changes: [{
               key: 'system.bonuses.challenge.boons.will',
               value: (target.system.willChallengeRollBanes)*-1,
-              mode: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+              mode: 'add',
             }, ],
             expiry: 'NextChallengeRoll'
           })
@@ -1261,7 +1261,7 @@ getTargetAttackBane(target) {
             changes: [{
               key: 'system.bonuses.challenge.boons.will',
               value: darkMagicSpellsKnown.length,
-              mode: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+              mode: 'add',
             }, ],
             expiry: 'NextChallengeRoll'
           })

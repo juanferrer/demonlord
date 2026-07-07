@@ -5,54 +5,54 @@ import { i18n } from '../utils/utils'
 export const multiplyEffect = (key, value, priority) => ({
   key: key,
   value: parseFloat(value),
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.MULTIPLY,
+  type: 'multiply',
   priority: priority
 })
 
 export const addEffect = (key, value, priority, noPlusify=false) => ({
   key: key,
   value: noPlusify ? value : (value ? plusify(value) : 0),
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+  type: 'add',
   priority: priority
 })
 
 export const concatDiceEffect = (key, value) => ({
   key: key,
   value: value ? '+' + String(value) : null,
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+  type: 'add',
 })
 
 export const concatString = (key, value, separator = '') => ({
   key: key,
   value: value ? value + separator : null,
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+  type: 'add',
 })
 
 export const overrideEffect = (key, value, priority, noParse=false) => ({
   key: key,
   value: noParse ? value : parseInt(value),
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.OVERRIDE,
+  type: 'override',
   priority: priority
 })
 
 export const upgradeEffect = (key, value, priority) => ({
   key: key,
   value: parseInt(value),
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.UPGRADE,
+  type: 'upgrade',
   priority: priority
 })
 
 export const downgradeEffect = (key, value, priority) => ({
   key: key,
   value: parseInt(value),
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.DOWNGRADE,
+  type: 'downgrade',
   priority: priority
 })
 
 export const addObject = (key, value) => ({
   key: key,
   value: JSON.stringify(value),
-  type: CONST.ACTIVE_EFFECT_CHANGE_TYPES.ADD,
+  type: 'add',
 })
 
 const falsyChangeFilter = change => Boolean(change?.value)

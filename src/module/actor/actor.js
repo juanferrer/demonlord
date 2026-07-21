@@ -155,7 +155,7 @@ export class DemonlordActor extends Actor {
       return changes.concat(e.changes.map(c => {
         c = foundry.utils.duplicate(c)
         c.effect = e
-        c.priority = c.priority ?? (c.mode * 10)
+        c.priority = c.priority ?? (CONST.ACTIVE_EFFECT_CHANGE_TYPES[c.type] * 10)
         return c
       }))
     }, []).filter(e => e.key.startsWith("system.attributes") || e.key.startsWith("system.characteristics"))
@@ -233,22 +233,25 @@ export class DemonlordActor extends Actor {
 
       sizeMod = this.getSizeFromString(change.value)
 
-      switch (change.mode) {
-        case 0: // CUSTOM
+      switch (change.type) {
+        case 'custom':
           break
-        case 1: // MULTIPLY
+        case 'multiply':
           modifiedSize *= sizeMod
           break
-        case 2: // ADD
+        case 'add':
           modifiedSize += sizeMod
           break
-        case 3: // DOWNGRADE
+        case 'subtract':
+          modifiedSize -= sizeMod
+          break
+        case 'downgrade':
           modifiedSize = Math.min(modifiedSize, sizeMod)
           break
-        case 4: // UPGRADE
+        case 'upgrade':
           modifiedSize = Math.max(modifiedSize, sizeMod)
           break
-        case 5: // OVERRIDE
+        case 'override':
           modifiedSize = sizeMod
           break
       }

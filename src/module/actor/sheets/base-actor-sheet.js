@@ -526,7 +526,7 @@ export default class DLBaseActorSheet extends HandlebarsApplicationMixin(ActorSh
 
             if (afflictionId === "horrified")
             {
-              affliction.description = game.settings.get('demonlord', 'optionalRuleBaneValue') ? affliction.description.replace('3','2') : affliction.description = affliction.description.replace('2','3')
+              affliction.description = game.settings.get('demonlord', 'optionalRuleBaneValue') ? affliction.description?.replace('3','2') : affliction.description = affliction.description?.replace('2','3')
               game.settings.get('demonlord', 'optionalRuleBaneValue') ? Object.keys(affliction.changes).forEach(function(value){ affliction.changes[value].value = -2 }) : Object.keys(affliction.changes).forEach(function(value){ affliction.changes[value].value = -3 })
             }
 

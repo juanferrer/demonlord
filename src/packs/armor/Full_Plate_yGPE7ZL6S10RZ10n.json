@@ -43,7 +43,7 @@
       "changes": [
         {
           "key": "system.characteristics.speed",
-          "mode": 2,
+          "type": "add",
           "value": "-2"
         }
       ],

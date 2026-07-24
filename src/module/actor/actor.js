@@ -987,7 +987,7 @@ getTargetAttackBane(target) {
     })
 
     // Add concentration if it's in the spell duration
-    const concentrate = CONFIG.statusEffects['concentrate']
+    const concentrate = foundry.utils.deepClone(CONFIG.statusEffects['concentrate'])
     if (
       spell.system.duration.toLowerCase().includes('concentration') &&
       this.effects.find(e => e.statuses?.has('concentrate')) === undefined &&

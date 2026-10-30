@@ -22,3 +22,7 @@ junit.xml
 # Environment variables
 .env
 .DS_Store
+
+# Dev environment
+.vscode/
+.husky/
